@@ -1,0 +1,40 @@
+# Generated firewall-config $generated-date
+*filter
+:INPUT   DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT  DROP [0:0]
+
+-A INPUT -i lo -j ACCEPT
+
+# simple atacks
+-A INPUT -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m state --state NEW -m limit --limit 5/min --limit-burst 7 -j LOG --log-prefix "Drop Sync"
+-A INPUT -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m state --state NEW -j DROP
+-A INPUT -f -m limit --limit 5/min --limit-burst 7 -j LOG --log-prefix "Fragments Packets"
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,PSH,URG -j DROP
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,PSH,ACK,URG -j DROP
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -m limit --limit 5/min --limit-burst 7 -j LOG --log-prefix "NULL Packets"
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG NONE -j DROP
+-A INPUT -p tcp -m tcp --tcp-flags SYN,RST SYN,RST -j DROP
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -m limit --limit 5/min --limit-burst 7 -j LOG --log-prefix "XMAS Packets"
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN FIN,SYN -j DROP
+-A INPUT -p tcp -m tcp --tcp-flags FIN,ACK FIN -m limit --limit 5/min --limit-burst 7 -j LOG --log-prefix "Fin Packets Scan"
+-A INPUT -p tcp -m tcp --tcp-flags FIN,ACK FIN -j DROP
+-A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK,URG -j DROP
+
+# -A INPUT -f -j DROP
+
+# input packets
+
+# output packets
+
+# forward packets
+#foreach( $p in $forward-packets )
+# $p.appProtocol/$p.program   $p.source_address --> $p.destination_address:$p.destination_port $p.protocol
+-A FORWARD -s $p.source_address -d $p.destination_address -i $p.input_interface -o $p.output_interface -p $p.protocol -m $p.protocol --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s $p.destination_address -d $p.source_address -i $p.output_interface -o $p.input_interface -p $p.protocol -m $p.protocol --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
+    #if ($p.type == "SNAT")    -t nat -A POSTROUTING -s $p.source_address  -d $p.destination_address -p $p.protocol  --dport $p.destination_port -o $p.output_interface -j SNAT --to-source $p.source_nat_address
+    #elseif($p.type == "DNAT") -t nat -A PREROUTING -d $p.destination_nat_address -p tcp -m tcp --dport $p.destination_nat_port -j DNAT --to-destination $p.destination_address:$p.destination_port
+    #end
+
+#end
+
