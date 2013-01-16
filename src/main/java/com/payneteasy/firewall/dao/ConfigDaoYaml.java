@@ -89,7 +89,7 @@ public class ConfigDaoYaml implements IConfigDao {
 
             THost host = theYaml.loadAs(in, THost.class);
             host.name = aFile.getName().replaceAll(".yml", "");
-            host.group = aFile.getParent();
+            host.group = aFile.getParentFile().getName();
 
             return host;
         } finally {

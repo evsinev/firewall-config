@@ -45,6 +45,9 @@ public class PacketServiceImpl implements IPacketService {
 
                 for (THost sourceHost : info.access) {
 
+                    if(middleHost.name.equals(sourceHost.name)) continue;
+                    if(sourceHost.name.equals(destinationHost.name)) continue;
+
                     Packet packet = new Packet();
                     packet.source_address = sourceHost.getDefaultIp();
                     packet.input_interface = findInterface(middleHost, sourceHost);
