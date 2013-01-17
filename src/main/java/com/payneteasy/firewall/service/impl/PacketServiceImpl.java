@@ -74,6 +74,10 @@ public class PacketServiceImpl implements IPacketService {
                     //packet.destination_nat_address;
                     //packet.destination_nat_port;
 
+                    // checks
+                    // not same interface
+                    if(packet.input_interface.equals(packet.output_interface)) continue;
+
                     ret.add(packet);
                 }
 
