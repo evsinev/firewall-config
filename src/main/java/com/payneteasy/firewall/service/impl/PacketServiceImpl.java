@@ -7,15 +7,10 @@ import com.payneteasy.firewall.dao.model.TProtocol;
 import com.payneteasy.firewall.dao.model.TService;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
-import com.payneteasy.firewall.service.model.Packet;
-import com.payneteasy.firewall.service.model.ServiceInfo;
-import com.payneteasy.firewall.service.model.UrlInfo;
+import com.payneteasy.firewall.service.model.*;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import static java.lang.String.format;
 
@@ -53,9 +48,11 @@ public class PacketServiceImpl implements IPacketService {
 
                     Packet packet = new Packet();
                     packet.source_address = sourceHost.getDefaultIp();
+                    packet.source_address_name = sourceHost.name;
                     packet.input_interface = findInterface(middleHost, sourceHost);
 
                     packet.destination_address = service.address;
+                    packet.destination_address_name = destinationHost.name;
                     packet.destination_port = service.port;
                     packet.output_interface = findInterface(middleHost, destinationHost);
 
@@ -63,7 +60,7 @@ public class PacketServiceImpl implements IPacketService {
 
 //                    packet.type = "FORWARD";
 
-                    packet.appProtocol = service.appProtocol;
+                    packet.app_protocol = service.appProtocol;
                     packet.program = service.program;
 
                     // SNAT
@@ -96,6 +93,71 @@ public class PacketServiceImpl implements IPacketService {
         }
 
         return ret;
+    }
+
+    @Override
+    public List<InputPacket> getInputPackets(String aHostname) throws ConfigurationException {
+        List<InputPacket> ret = new ArrayList<InputPacket>();
+
+        THost targetHost = theConfigDao.getHostByName(aHostname);
+        for (TService serviceConfig : targetHost.services) {
+
+            UrlInfo serviceUrl = UrlInfo.parse(serviceConfig.url, targetHost.getDefaultIp(), theConfigDao);
+
+            for (THost sourceHost : createAccessList(serviceConfig.access)) {
+                InputPacket packet = new InputPacket();
+
+                packet.destination_port = serviceUrl.port;
+                packet.input_interface  = findInterfaceByIp(serviceUrl.address, targetHost.interfaces, aHostname);
+                packet.app_protocol = serviceUrl.protocol;
+                packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
+                packet.source_address = sourceHost.getDefaultIp();
+                packet.source_address_name = sourceHost.name;
+
+                ret.add(packet);
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
+    public List<OutputPacket> getOutputPackets(String aHostname) throws ConfigurationException {
+        List<OutputPacket> ret = new ArrayList<OutputPacket>();
+
+//        THost sourceHost = theConfigDao.getHostByName(aHostname);
+
+        for (THost destinationHost : theConfigDao.listHosts()) {
+            for (TService serviceConfig : destinationHost.services) {
+                List<THost> access = createAccessList(serviceConfig.access);
+                for (THost sourceHost : access) {
+                    if(aHostname.equals(sourceHost.name)) {
+                        OutputPacket packet = new OutputPacket();
+
+                        UrlInfo serviceUrl = UrlInfo.parse(serviceConfig.url, destinationHost.getDefaultIp(), theConfigDao);
+
+                        packet.app_protocol = serviceUrl.protocol;
+                        packet.destination_address = serviceUrl.address;
+                        packet.destination_address_name = destinationHost.name;
+                        packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
+                        packet.destination_port = serviceUrl.port;
+
+                        ret.add(packet);
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private String findInterfaceByIp(String aAddress, List<TInterface> aInterfaces, String aHostname) throws ConfigurationException {
+        for (TInterface iface : aInterfaces) {
+            if(aAddress.equals(iface.ip)) {
+                return iface.name;
+            }
+        }
+        throw new ConfigurationException(String.format("Can't find ip %s in interfaces for host %s", aAddress, aHostname));
     }
 
     private boolean isPublicAddress(String aAddress) {

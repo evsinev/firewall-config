@@ -4,7 +4,9 @@
 :FORWARD DROP [0:0]
 :OUTPUT  DROP [0:0]
 
--A INPUT -i lo -j ACCEPT
+# loopback interface
+-A INPUT  -i lo -j ACCEPT
+-A OUTPUT -o lo -j ACCEPT
 
 # simple atacks
 -A INPUT -p tcp -m tcp ! --tcp-flags FIN,SYN,RST,ACK SYN -m state --state NEW -m limit --limit 5/min --limit-burst 7 -j LOG --log-prefix "Drop Sync"
@@ -23,13 +25,32 @@
 
 # -A INPUT -f -j DROP
 
+#
 # input packets
+#
+#foreach( $p in $input-packets )
+# $p.source_address_name -> $p.app_protocol
+-A INPUT  -i $p.input_interface -p $p.protocol -m $p.protocol -s $p.source_address --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -o $p.input_interface -p $p.protocol -m $p.protocol -d $p.source_address --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
 
+#end
+
+#
 # output packets
+#
+#foreach( $p in $output-packets )
+# $p.app_protocol://$p.destination_address_name
+-A OUTPUT -p $p.protocol -m $p.protocol -d $p.destination_address --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A INPUT  -p $p.protocol -m $p.protocol -s $p.destination_address --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
 
+#end
+
+
+#
 # forward packets
+#
 #foreach( $p in $forward-packets )
-# $p.appProtocol/$p.program   $p.source_address --> $p.destination_address:$p.destination_port $p.protocol
+# $p.source_address_name -> $p.app_protocol://$p.destination_address_name
 -A FORWARD -s $p.source_address -d $p.destination_address -i $p.input_interface -o $p.output_interface -p $p.protocol -m $p.protocol --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -s $p.destination_address -d $p.source_address -i $p.output_interface -o $p.input_interface -p $p.protocol -m $p.protocol --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
 #if ($p.type == "SNAT")

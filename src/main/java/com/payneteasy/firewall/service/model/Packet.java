@@ -7,7 +7,9 @@ public class Packet {
     public String type;
 
     public String source_address;
+    public String source_address_name;
     public String destination_address;
+    public String destination_address_name;
 
     public int destination_port;
 
@@ -20,15 +22,23 @@ public class Packet {
 
     public String destination_nat_address;
     public int destination_nat_port;
-    public String appProtocol;
+    public String app_protocol;
     public String program;
+
+    public String getSource_address_name() {
+        return source_address_name;
+    }
+
+    public String getDestination_address_name() {
+        return destination_address_name;
+    }
 
     public String getProgram() {
         return program;
     }
 
-    public String getAppProtocol() {
-        return appProtocol;
+    public String getApp_protocol() {
+        return app_protocol;
     }
 
     public String getType() {

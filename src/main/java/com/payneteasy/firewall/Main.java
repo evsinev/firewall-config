@@ -5,6 +5,8 @@ import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.impl.PacketServiceImpl;
+import com.payneteasy.firewall.service.model.InputPacket;
+import com.payneteasy.firewall.service.model.OutputPacket;
 import com.payneteasy.firewall.service.model.Packet;
 import com.payneteasy.firewall.util.VelocityBuilder;
 
@@ -30,10 +32,14 @@ public class Main {
         IPacketService packetService = new PacketServiceImpl(configDao);
 
         List<Packet> forwards = packetService.getForwardPackets(host);
+        List<InputPacket> inputs = packetService.getInputPackets(host);
+        List<OutputPacket> outputs = packetService.getOutputPackets(host);
 
         VelocityBuilder velocity = new VelocityBuilder();
         velocity.add("generated-date", new Date());
         velocity.add("forward-packets", forwards);
+        velocity.add("input-packets", inputs);
+        velocity.add("output-packets", outputs);
 
         PrintWriter out = new PrintWriter(System.out);
         try {
