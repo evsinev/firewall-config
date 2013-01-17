@@ -9,12 +9,15 @@ import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.Packet;
 import com.payneteasy.firewall.service.model.ServiceInfo;
+import com.payneteasy.firewall.service.model.UrlInfo;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+
+import static java.lang.String.format;
 
 /**
  *
@@ -34,16 +37,16 @@ public class PacketServiceImpl implements IPacketService {
         List<THost> destinations = theConfigDao.findHostByGw(middleHost.interfaces);
         for (THost destinationHost : destinations) {
             // list services
-            for (TService service : destinationHost.services) {
+            for (TService serviceConfig : destinationHost.services) {
 
-                ServiceInfo info;
+                ServiceInfo service;
                 try {
-                    info = getServiceInfo(service, destinationHost.interfaces);
+                    service = getServiceInfo(serviceConfig, destinationHost.interfaces);
                 } catch (Exception e) {
-                    throw new ConfigurationException("Can't create service info for " + destinationHost.name + " and service " + service.url, e);
+                    throw new ConfigurationException("Can't create serviceConfig service for " + destinationHost.name + " and serviceConfig " + serviceConfig.url, e);
                 }
 
-                for (THost sourceHost : info.access) {
+                for (THost sourceHost : service.access) {
 
                     if(middleHost.name.equals(sourceHost.name)) continue;
                     if(sourceHost.name.equals(destinationHost.name)) continue;
@@ -52,27 +55,35 @@ public class PacketServiceImpl implements IPacketService {
                     packet.source_address = sourceHost.getDefaultIp();
                     packet.input_interface = findInterface(middleHost, sourceHost);
 
-                    packet.destination_address = info.address;
-                    packet.destination_port = info.port;
+                    packet.destination_address = service.address;
+                    packet.destination_port = service.port;
                     packet.output_interface = findInterface(middleHost, destinationHost);
 
-                    packet.protocol = info.protocol;
+                    packet.protocol = service.protocol;
 
-                    packet.type = "FORWARD";
+//                    packet.type = "FORWARD";
 
-                    packet.appProtocol = info.appProtocol;
-                    packet.program = info.program;
+                    packet.appProtocol = service.appProtocol;
+                    packet.program = service.program;
 
                     // SNAT
-                    //if(isPublicAddress(destinationHost.getDefaultIp())) {
-
-                        //packet.source_nat_address = ;
-
-                    //}
+                    if(isPublicAddress(destinationHost.getDefaultIp())) {
+                        packet.source_nat_address = service.nat.address;
+                        packet.type = "SNAT";
+                    }
 
                     // DNAT
-                    //packet.destination_nat_address;
-                    //packet.destination_nat_port;
+                    if(isPublicAddress(sourceHost.getDefaultIp())) {
+                        if(packet.type!=null) {
+                            throw new ConfigurationException(format("Trying to config both SNAT and DNAT with %s(%s) -> %s(%s)", sourceHost.name, sourceHost.getDefaultIp(), destinationHost.name, destinationHost.getDefaultIp()));
+                        } else {
+                            packet.type = "DNAT";
+                            packet.destination_nat_address = service.nat.address;
+                            packet.destination_nat_port    = service.nat.port;
+                        }
+
+                    }
+
 
                     // checks
                     // not same interface
@@ -87,6 +98,10 @@ public class PacketServiceImpl implements IPacketService {
         return ret;
     }
 
+    private boolean isPublicAddress(String aAddress) {
+        return !aAddress.startsWith("10.") && !aAddress.startsWith("172.16") && !aAddress.startsWith("192.168");
+    }
+
     private String findInterface(THost aMiddleHost, THost aConnectedHost) throws ConfigurationException {
         for (TInterface iface : aMiddleHost.interfaces) {
             if(iface.ip.equals(aConnectedHost.gw)) {
@@ -98,43 +113,23 @@ public class PacketServiceImpl implements IPacketService {
 
     private ServiceInfo getServiceInfo(TService service, List<TInterface> aInterfaces) throws ConfigurationException {
 
-        String name;
-        Integer port;
-        String address;
+        UrlInfo url = UrlInfo.parse(service.url, aInterfaces.get(0).ip, theConfigDao);
 
-        if (service.url.contains(" ")) {
-            StringTokenizer st = new StringTokenizer(service.url, ":;.- \t");
-            name = st.nextToken();
-            port = Integer.parseInt(st.nextToken());
-            address = aInterfaces.get(0).ip;
-
-        } else if (service.url.contains("/")) {
-            try {
-                URL url = new URL(service.url);
-                name = url.getProtocol();
-                address = url.getHost();
-                port = url.getPort();
-            } catch (MalformedURLException e) {
-                throw new ConfigurationException("Can't parse url " + service.url, e);
-            }
-        } else {
-            name = service.url;
-            address = aInterfaces.get(0).ip;
-            port = null;
-        }
-
-        TProtocol protocol = theConfigDao.findProtocol(name);
+        TProtocol protocol = theConfigDao.findProtocol(url.protocol);
 
         ServiceInfo info = new ServiceInfo();
 
-        info.appProtocol = name;
+        info.appProtocol = url.protocol;
         info.protocol = protocol.protocol;
-        info.port = port != null ? port : protocol.port;
-        info.address = address;
+        info.port = url.port;
+        info.address = url.address;
         info.program = protocol.program;
         info.description = protocol.description;
         info.justification = protocol.justification;
         info.access = createAccessList(service.access);
+        if(service.nat!=null) {
+            info.nat = UrlInfo.parse(service.nat, url.address, theConfigDao);
+        }
 
         return info;
     }

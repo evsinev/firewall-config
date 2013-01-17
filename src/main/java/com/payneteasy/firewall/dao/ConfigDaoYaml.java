@@ -4,12 +4,15 @@ import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
 import com.payneteasy.firewall.dao.model.TProtocol;
 import com.payneteasy.firewall.dao.model.TProtocols;
+import com.payneteasy.firewall.service.ConfigurationException;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+
+import static java.lang.String.format;
 
 /**
  *
@@ -121,6 +124,24 @@ public class ConfigDaoYaml implements IConfigDao {
             }
         }
         return ret;
+    }
+
+    @Override
+    public String resolveDns(String aName) throws ConfigurationException {
+        String found = null;
+        for (THost host : theHosts) {
+            for (TInterface iface : host.interfaces) {
+                if(aName.equals(iface.dns)) {
+                    if(found!=null) throw  new ConfigurationException(format("DNS name %s has two ip addresses %s and %s", aName, found, iface.ip));
+                    found = iface.ip;
+
+                }
+            }
+        }
+        if(found==null) {
+            throw new ConfigurationException(format("DNS name %s not found", aName));
+        }
+        return found;
     }
 
     public final List<THost> theHosts;

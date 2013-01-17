@@ -20,5 +20,7 @@ public class ServiceInfo {
 
     public String program;
 
+    public UrlInfo nat;
+
     public List<THost> access;
 }
