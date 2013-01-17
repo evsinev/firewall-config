@@ -35,6 +35,7 @@ public class ConfigDaoYaml implements IConfigDao {
 
             for (TProtocol protocol : protocols.protocols) {
                 if(protocol.protocol==null) throw new IllegalStateException("protocol is null for "+protocol.name);
+                if(protocol.port==0) throw new IllegalStateException("Port is empty for "+protocol.name);
                 theProtocols.put(protocol.name, protocol);
             }
         } finally {
