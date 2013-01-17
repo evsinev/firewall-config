@@ -1,4 +1,4 @@
-# Generated firewall-config $generated-date
+# Generated firewall-config by $generated-user at $generated-date
 *filter
 :INPUT   DROP [0:0]
 :FORWARD DROP [0:0]
@@ -45,7 +45,6 @@
 
 #end
 
-
 #
 # forward packets
 #
@@ -53,12 +52,31 @@
 # $p.source_address_name -> $p.app_protocol://$p.destination_address_name
 -A FORWARD -s $p.source_address -d $p.destination_address -i $p.input_interface -o $p.output_interface -p $p.protocol -m $p.protocol --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -s $p.destination_address -d $p.source_address -i $p.output_interface -o $p.input_interface -p $p.protocol -m $p.protocol --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
-#if ($p.type == "SNAT")
--t nat -A POSTROUTING -s $p.source_address  -d $p.destination_address -p $p.protocol  --dport $p.destination_port -o $p.output_interface -j SNAT --to-source $p.source_nat_address
-#elseif($p.type == "DNAT")
--t nat -A PREROUTING -d $p.destination_nat_address -p tcp -m tcp --dport $p.destination_nat_port -j DNAT --to-destination $p.destination_address:$p.destination_port
+
 #end
 
+
+-A OUTPUT -j LOG --log-prefix "Drop output packet:"
+-A INPUT -j LOG --log-prefix "Drop input packet:"
+-A FORWARD -j LOG --log-prefix "Drop forward packet:"
+
+COMMIT
+
+*nat
+:PREROUTING  ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:OUTPUT      ACCEPT [0:0]
+
+#foreach( $p in $forward-packets )
+#if ($p.type == "SNAT")
+# $p.source_address_name -> $p.app_protocol://$p.destination_address_name
+-A POSTROUTING -s $p.source_address  -d $p.destination_address -p $p.protocol  --dport $p.destination_port -o $p.output_interface -j SNAT --to-source $p.source_nat_address
+
+#elseif($p.type == "DNAT")
+# $p.source_address_name -> $p.app_protocol://$p.destination_address_name
+-A PREROUTING -d $p.destination_nat_address -p tcp -m tcp --dport $p.destination_nat_port -j DNAT --to-destination $p.destination_address:$p.destination_port
+
+#end
 #end
 
 COMMIT

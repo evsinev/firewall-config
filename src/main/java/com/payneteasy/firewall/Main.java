@@ -37,6 +37,7 @@ public class Main {
 
         VelocityBuilder velocity = new VelocityBuilder();
         velocity.add("generated-date", new Date());
+        velocity.add("generated-user", System.getenv("USER"));
         velocity.add("forward-packets", forwards);
         velocity.add("input-packets", inputs);
         velocity.add("output-packets", outputs);
