@@ -62,6 +62,7 @@
 
 COMMIT
 
+# default policy is ACCEPT because nat is virtual and packet pass FORWARD chain always
 *nat
 :PREROUTING  ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]
