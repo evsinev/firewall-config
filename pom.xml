@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.payneteasy.ldap</groupId>
-    <artifactId>users</artifactId>
+    <groupId>com.payneteasy.firewall</groupId>
+    <artifactId>config</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
-    <name>users</name>
+    <name>firewall-config</name>
     <url>http://maven.apache.org</url>
     <dependencies>
 
@@ -37,7 +37,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.payneteasy.ldap.Console</mainClass>
+                            <mainClass>com.payneteasy.firewall.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
