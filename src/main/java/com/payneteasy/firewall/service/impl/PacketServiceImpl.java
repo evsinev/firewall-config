@@ -10,6 +10,8 @@ import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -92,6 +94,16 @@ public class PacketServiceImpl implements IPacketService {
             }
         }
 
+        Collections.sort(ret, new Comparator<Packet>() {
+            @Override
+            public int compare(Packet aLeft, Packet aRight) {
+                int ret = aLeft.destination_address_name.compareTo(aRight.destination_address_name);
+                if(ret==0) {
+                    ret = aLeft.source_address_name.compareTo(aRight.source_address_name);
+                }
+                return ret;
+            }
+        });
         return ret;
     }
 
@@ -118,6 +130,16 @@ public class PacketServiceImpl implements IPacketService {
             }
         }
 
+        Collections.sort(ret, new Comparator<InputPacket>() {
+            @Override
+            public int compare(InputPacket aLeft, InputPacket aRight) {
+                int ret = aLeft.source_address_name.compareTo(aRight.source_address_name);
+                if(ret==0) {
+                    ret = aLeft.app_protocol.compareTo(aRight.app_protocol);
+                }
+                return ret;
+            }
+        });
         return ret;
     }
 
@@ -148,6 +170,16 @@ public class PacketServiceImpl implements IPacketService {
             }
         }
 
+        Collections.sort(ret, new Comparator<OutputPacket>() {
+            @Override
+            public int compare(OutputPacket aLeft, OutputPacket aRight) {
+                int ret = aLeft.destination_address_name.compareTo(aRight.destination_address_name);
+                if(ret==0) {
+                    ret = aLeft.app_protocol.compareTo(aRight.app_protocol);
+                }
+                return ret;
+            }
+        });
         return ret;
     }
 
