@@ -161,7 +161,8 @@ public class PacketServiceImpl implements IPacketService {
     }
 
     private boolean isPublicAddress(String aAddress) {
-        return !aAddress.startsWith("10.") && !aAddress.startsWith("172.16") && !aAddress.startsWith("192.168");
+        // todo quick fix for other network other then 10.0
+        return !aAddress.startsWith("10.0") && !aAddress.startsWith("172.16") && !aAddress.startsWith("192.168");
     }
 
     private String findInterface(THost aMiddleHost, THost aConnectedHost) throws ConfigurationException {

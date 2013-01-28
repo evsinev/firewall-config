@@ -26,22 +26,30 @@
 # -A INPUT -f -j DROP
 
 #
-# input packets
+# INPUT packets
 #
 #foreach( $p in $input-packets )
 # $p.source_address_name -> $p.app_protocol
+#if ($p.destination_port > 0 )
 -A INPUT  -i $p.input_interface -p $p.protocol -m $p.protocol -s $p.source_address --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A OUTPUT -o $p.input_interface -p $p.protocol -m $p.protocol -d $p.source_address --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
+#else
+-A INPUT  -i $p.input_interface -p $p.protocol -s $p.source_address -j ACCEPT
+#end
 
 #end
 
 #
-# output packets
+# OUTPUT packets
 #
 #foreach( $p in $output-packets )
 # $p.app_protocol://$p.destination_address_name
+#if ($p.destination_port > 0 )
 -A OUTPUT -p $p.protocol -m $p.protocol -d $p.destination_address --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A INPUT  -p $p.protocol -m $p.protocol -s $p.destination_address --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
+#else
+-A OUTPUT -p $p.protocol -d $p.destination_address -j ACCEPT
+#end
 
 #end
 
@@ -50,8 +58,12 @@
 #
 #foreach( $p in $forward-packets )
 # $p.source_address_name -> $p.app_protocol://$p.destination_address_name
+#if ($p.destination_port > 0 )
 -A FORWARD -s $p.source_address -d $p.destination_address -i $p.input_interface -o $p.output_interface -p $p.protocol -m $p.protocol --dport $p.destination_port -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -s $p.destination_address -d $p.source_address -i $p.output_interface -o $p.input_interface -p $p.protocol -m $p.protocol --sport $p.destination_port -m state --state RELATED,ESTABLISHED -j ACCEPT
+#else
+-A FORWARD -s $p.source_address -d $p.destination_address -i $p.input_interface -o $p.output_interface -p $p.protocol  -j ACCEPT
+#end
 
 #end
 
@@ -71,11 +83,19 @@ COMMIT
 #foreach( $p in $forward-packets )
 #if ($p.type == "SNAT")
 # $p.source_address_name -> $p.app_protocol://$p.destination_address_name
+#if ($p.destination_port > 0 )
 -A POSTROUTING -s $p.source_address  -d $p.destination_address -p $p.protocol  --dport $p.destination_port -o $p.output_interface -j SNAT --to-source $p.source_nat_address
+#else
+-A POSTROUTING -s $p.source_address  -d $p.destination_address -p $p.protocol  -o $p.output_interface -j SNAT --to-source $p.source_nat_address
+#end
 
 #elseif($p.type == "DNAT")
 # $p.source_address_name -> $p.app_protocol://$p.destination_address_name
--A PREROUTING -d $p.destination_nat_address -p tcp -m tcp --dport $p.destination_nat_port -j DNAT --to-destination $p.destination_address:$p.destination_port
+#if ($p.destination_port > 0 )
+-A PREROUTING -d $p.destination_nat_address -p $p.protocol -m $p.protocol --dport $p.destination_nat_port -j DNAT --to-destination $p.destination_address:$p.destination_port
+#else
+-A PREROUTING -d $p.destination_nat_address -p $p.protocol -j DNAT --to-destination $p.destination_address
+#end
 
 #end
 #end
