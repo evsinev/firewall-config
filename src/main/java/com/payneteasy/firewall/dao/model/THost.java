@@ -1,5 +1,6 @@
 package com.payneteasy.firewall.dao.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public class THost {
 
     public List<TInterface> interfaces;
 
-    public List<TService> services;
+    public List<TService> services = new ArrayList<TService>();
 
     public String getDefaultIp() {
         return interfaces.get(0).ip;
