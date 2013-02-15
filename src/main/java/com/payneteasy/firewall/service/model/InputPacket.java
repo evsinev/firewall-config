@@ -7,6 +7,7 @@ public class InputPacket {
 
     public String protocol;
     public String source_address;
+    public String destination_address;
     public int destination_port;
     public String input_interface;
     public String source_address_name;
@@ -30,6 +31,10 @@ public class InputPacket {
 
     public int getDestination_port() {
         return destination_port;
+    }
+
+    public String getDestination_address() {
+        return destination_address;
     }
 
     public String getInput_interface() {

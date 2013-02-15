@@ -120,6 +120,7 @@ public class PacketServiceImpl implements IPacketService {
                 InputPacket packet = new InputPacket();
 
                 packet.destination_port = serviceUrl.port;
+                packet.destination_address = serviceUrl.address;
                 packet.input_interface  = findInterfaceByIp(serviceUrl.address, targetHost.interfaces, aHostname);
                 packet.app_protocol = serviceUrl.protocol;
                 packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
