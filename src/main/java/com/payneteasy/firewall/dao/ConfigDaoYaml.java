@@ -1,16 +1,32 @@
 package com.payneteasy.firewall.dao;
 
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
+import com.google.common.io.Files;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
+import com.payneteasy.firewall.dao.model.TPageHistory;
+import com.payneteasy.firewall.dao.model.TPagesHistory;
 import com.payneteasy.firewall.dao.model.TProtocol;
 import com.payneteasy.firewall.dao.model.TProtocols;
 import com.payneteasy.firewall.service.ConfigurationException;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.yaml.snakeyaml.Yaml;
 
 import static java.lang.String.format;
 
@@ -21,34 +37,71 @@ public class ConfigDaoYaml implements IConfigDao {
 
     public ConfigDaoYaml(File aDir) throws IOException {
         theYaml = new Yaml();
+        theDir = aDir;
 
         theHosts = new ArrayList<THost>();
         loadHosts(theHosts, new File(aDir, "hosts"));
 
         theMap = createMap(theHosts);
 
-        theProtocols = new HashMap<String, TProtocol>();
-        loadProtocols(new File(aDir, "protocols.yml"));
+        thePagesHistoryMap = Maps.newHashMap();
+        loadPagesHistory(new File(aDir, "pages_history.yml"));
+        
+        theProtocolsMap = new HashMap<String, TProtocol>();
+        theProtocols = loadProtocols(new File(aDir, "protocols.yml"));
     }
 
-    private void loadProtocols(File aFile) throws IOException {
+    private void loadPagesHistory(File aFile) throws IOException {
+        TPagesHistory pagesHistory;
+        if (aFile.exists()) {
+            Reader in = null;
+            try {
+                in = Files.newReader(aFile, Charsets.UTF_8);
+                pagesHistory = theYaml.loadAs(in, TPagesHistory.class);
+                if (pagesHistory != null) {
+                    for (TPageHistory pageHistory : pagesHistory.pageHistories) {
+                        if (pageHistory.pageHash == 0) {
+                            throw new IllegalStateException("page hash is empty for " + pageHistory.pageName);
+                        }
+                        thePagesHistoryMap.put(pageHistory.pageName, pageHistory);
+                    }
+                }
+            } finally {
+                Closeables.closeQuietly(in);
+            }
+        }      
+    }
+    
+    private TProtocols loadProtocols(File aFile) throws IOException {
         FileReader in = new FileReader(aFile);
+        TProtocols protocols; 
         try {
-            TProtocols protocols = theYaml.loadAs(in, TProtocols.class);
+            protocols = theYaml.loadAs(in, TProtocols.class);
 
             for (TProtocol protocol : protocols.protocols) {
                 if(protocol.protocol==null) throw new IllegalStateException("protocol is null for "+protocol.name);
                 if(protocol.port==0) throw new IllegalStateException("Port is empty for "+protocol.name);
-                theProtocols.put(protocol.name, protocol);
+                theProtocolsMap.put(protocol.name, protocol);
             }
         } finally {
             in.close();
         }
+        return protocols;
+    }
+
+    @Override public TPageHistory findPageHistory(String aPageName) {
+        TPageHistory pageHistory = thePagesHistoryMap.get(aPageName);
+        if (pageHistory == null) {
+            pageHistory = new TPageHistory();
+            pageHistory.pageName = aPageName;
+            thePagesHistoryMap.put(aPageName, pageHistory);
+        }
+        return pageHistory;
     }
 
     @Override
     public TProtocol findProtocol(String aName) {
-        TProtocol protocol = theProtocols.get(aName);
+        TProtocol protocol = theProtocolsMap.get(aName);
         if(protocol==null) throw new IllegalStateException("Protocol "+aName+" not found in protocols.yml");
         return protocol;
     }
@@ -62,6 +115,20 @@ public class ConfigDaoYaml implements IConfigDao {
             }
         }
         return ret;
+    }
+
+    @Override public void persistPagesHistory() throws FileNotFoundException {
+        File file = new File(theDir, "pages_history.yml");
+        Writer writer = null; 
+        try {
+            writer = Files.newWriter(file, Charsets.UTF_8);
+            TPagesHistory history = new TPagesHistory();
+            history.pageHistories = Lists.newArrayList(thePagesHistoryMap.values());
+            history.lastUpdateDate = new Date();
+            theYaml.dump(history, writer);
+        } finally {
+            Closeables.closeQuietly(writer);
+        }
     }
 
     private Map<String, THost> createMap(List<THost> aHosts) {
@@ -113,6 +180,10 @@ public class ConfigDaoYaml implements IConfigDao {
         return theHosts;
     }
 
+    @Override public TProtocols listProtocols() {
+        return theProtocols;
+    }
+
     @Override
     public List<THost> findHostByGw(List<TInterface> aInterfaces) {
         List<THost> ret = new ArrayList<THost>();
@@ -144,8 +215,11 @@ public class ConfigDaoYaml implements IConfigDao {
         return found;
     }
 
+    public final File theDir;
     public final List<THost> theHosts;
     public final Map<String, THost> theMap;
     public final Yaml theYaml;
-    public final Map<String, TProtocol> theProtocols;
+    public final Map<String, TPageHistory> thePagesHistoryMap;
+    public final TProtocols theProtocols;
+    public final Map<String, TProtocol> theProtocolsMap;
 }
