@@ -87,14 +87,10 @@ public class MainWiki {
             configDao.persistPagesHistory();
         }
     }
-    
-    private static long getHashCode(String string) {
-        return HashCodes.fromBytes(string.getBytes(Charsets.UTF_8)).asLong();
-    }
-    
+
     private static boolean createOrUpdateWikiPage(RedmineEasyClient client, IConfigDao configDao, boolean force,
             String pageName, String pageTitle, String content) throws IOException {
-        long hashCode = getHashCode(content);
+        long hashCode = content.hashCode();
         TPageHistory pageHistory = configDao.findPageHistory(pageName);
         boolean createOrUpdate = force || pageHistory.pageHash != hashCode;
         if (createOrUpdate) {
