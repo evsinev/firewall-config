@@ -1,5 +1,6 @@
 package com.payneteasy.firewall.service.impl;
 
+import com.google.common.net.InetAddresses;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
@@ -9,6 +10,10 @@ import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.*;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -124,7 +129,7 @@ public class PacketServiceImpl implements IPacketService {
                 packet.input_interface  = findInterfaceByIp(serviceUrl.address, targetHost.interfaces, aHostname);
                 packet.app_protocol = serviceUrl.protocol;
                 packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
-                packet.source_address = sourceHost.getDefaultIp();
+                packet.source_address = findAddress(packet.destination_address, sourceHost);
                 packet.source_address_name = sourceHost.name;
 
                 ret.add(packet);
@@ -142,6 +147,53 @@ public class PacketServiceImpl implements IPacketService {
             }
         });
         return ret;
+    }
+
+    protected static String findAddress(String aAddress, THost aHost) throws ConfigurationException {
+        List<TInterface> interfaces = aHost.interfaces;
+        if(interfaces==null || interfaces.isEmpty()) throw new IllegalStateException("No interfaces for host "+aHost.name);
+        if(interfaces.size()==1) return aHost.getDefaultIp();
+
+        int right = parseAddress(aAddress);
+        int max = -1 ;
+        String maxAddress  = null;
+        for (TInterface iface : interfaces) {
+            int left = parseAddress(iface.ip);
+            int count = calcEqualsBits(right, left);
+//            System.out.println(count+" " +Integer.toBinaryString(right) + " " + Integer.toBinaryString(left)+" "+left+" "+iface.ip);
+            if(count>max) {
+                max = count;
+                maxAddress = iface.ip;
+            }
+        }
+        if(maxAddress==null) {
+            throw new ConfigurationException("Can't find address for "+aAddress+" in "+aHost.interfaces);
+        }
+        return maxAddress;
+    }
+
+    private static int calcEqualsBits(int aLeft, int aRight) {
+        String left = Integer.toBinaryString(aLeft);
+        String right = Integer.toBinaryString(aRight);
+        for(int i=0; i<left.length() && i<right.length(); i++) {
+            if(left.charAt(i)!=right.charAt(i)) {
+                return i-1;
+            }
+        }
+        return left.length()-1;
+    }
+
+    private static int parseAddress(String aIp) throws ConfigurationException {
+        try {
+            InetAddress address = Inet4Address.getByName(aIp);
+            byte[] bytes = new byte[8];
+            System.arraycopy(address.getAddress(), 0, bytes, 4, 4);
+//            return ByteBuffer.wrap(bytes).getLong();
+
+            return InetAddresses.coerceToInteger(address);
+        } catch (UnknownHostException e) {
+            throw new ConfigurationException("Can't parse ip address "+aIp);
+        }
     }
 
     @Override
