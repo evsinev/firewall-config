@@ -23,7 +23,6 @@
 -A INPUT -p tcp -m tcp --tcp-flags FIN,ACK FIN -j DROP
 -A INPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG FIN,SYN,RST,ACK,URG -j DROP
 
-# -A INPUT -f -j DROP
 
 #
 # INPUT packets
@@ -71,6 +70,10 @@
 -A OUTPUT -j LOG --log-prefix "Drop output packet:"
 -A INPUT -j LOG --log-prefix "Drop input packet:"
 -A FORWARD -j LOG --log-prefix "Drop forward packet:"
+
+-A OUTPUT  -j REJECT
+-A INPUT   -j REJECT
+-A FORWARD -j REJECT
 
 COMMIT
 
