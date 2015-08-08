@@ -10,10 +10,7 @@ import com.payneteasy.firewall.util.ShellFilePrinter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 
@@ -77,7 +74,7 @@ public class MainLinuxNetworkScript {
         }
 
         // finds hostInterfaces connected to vlan
-        List<String> vlans = new ArrayList<>();
+        Set<String> vlans = new TreeSet<>();
         for (THost leftHosts : dao.listHosts()) {
             for (TInterface leftInterface : leftHosts.interfaces) {
                 for (HostInterface hostInterface : hostInterfaces) {
@@ -98,7 +95,7 @@ public class MainLinuxNetworkScript {
             throw new IllegalStateException("There are more than 1 VLAN ("+vlans+") for interfaces "+hostInterfaces);
         }
 
-        return vlans.get(0);
+        return vlans.iterator().next();
     }
 
     private TInterface findInterface(THost aHost, String aInterfaceName) {
