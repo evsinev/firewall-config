@@ -11,5 +11,6 @@ public class TService {
     public String program;
     public String description;
     public String nat;
+    public String dip;
     public List<String> access;
 }

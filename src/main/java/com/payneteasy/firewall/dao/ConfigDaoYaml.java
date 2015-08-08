@@ -5,12 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-import com.payneteasy.firewall.dao.model.THost;
-import com.payneteasy.firewall.dao.model.TInterface;
-import com.payneteasy.firewall.dao.model.TPageHistory;
-import com.payneteasy.firewall.dao.model.TPagesHistory;
-import com.payneteasy.firewall.dao.model.TProtocol;
-import com.payneteasy.firewall.dao.model.TProtocols;
+import com.payneteasy.firewall.dao.model.*;
 import com.payneteasy.firewall.service.ConfigurationException;
 
 import java.io.File;
@@ -26,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.payneteasy.firewall.util.Networks;
 import org.yaml.snakeyaml.Yaml;
 
 import static java.lang.String.format;
@@ -185,11 +181,29 @@ public class ConfigDaoYaml implements IConfigDao {
     }
 
     @Override
+    public List<HostInterface> findHostInterfacesByGw(List<TInterface> aInterfaces) {
+        List<HostInterface> ret = new ArrayList<>();
+        for (THost host : theHosts) {
+            for (TInterface iface : aInterfaces) {
+                if(host.gw.equals(iface.ip) || host.gw.equals(iface.vip)) {
+                    // find interface
+                    for (TInterface leftInterface : host.interfaces) {
+                        if(Networks.isInNetwork(leftInterface, iface)) {
+                            ret.add(new HostInterface(host, leftInterface));
+                        }
+                    }
+                }
+            }
+        }
+        return ret;
+    }
+
+    @Override
     public List<THost> findHostByGw(List<TInterface> aInterfaces) {
         List<THost> ret = new ArrayList<THost>();
         for (THost host : theHosts) {
             for (TInterface iface : aInterfaces) {
-                if(host.gw.equals(iface.ip)) {
+                if(host.gw.equals(iface.ip) || host.gw.equals(iface.vip)) {
                     ret.add(host);
                 }
             }
@@ -213,6 +227,29 @@ public class ConfigDaoYaml implements IConfigDao {
             throw new ConfigurationException(format("DNS name %s not found", aName));
         }
         return found;
+    }
+
+    @Override
+    public HostInterface findLinkedInterface(THost aHost, TInterface aInterface) {
+        List<HostInterface> ret = new ArrayList<>();
+        String linkByName = new HostInterface(aHost, aInterface).link;
+        String linkByPort = aHost.name+"/"+aInterface.port;
+        for (THost leftHost : theHosts) {
+            for (TInterface leftInterface : leftHost.interfaces) {
+                if(linkByName.equals(leftInterface.link) || linkByPort.equals(leftInterface.link)) {
+                    ret.add(new HostInterface(leftHost, leftInterface));
+                }
+            }
+        }
+        if(ret.isEmpty()) {
+            return null;
+        }
+
+        if(ret.size() == 1 )  {
+            return ret.get(0);
+        }
+
+        throw new IllegalStateException("There are more than one interface ("+ret+") connected to the "+linkByName + " or "+linkByPort);
     }
 
     public final File theDir;

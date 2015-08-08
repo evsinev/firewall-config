@@ -1,0 +1,12 @@
+nwdiag {
+
+    {{#networks}}
+    network "{{name}}" {
+        address = "{{address}}/24";
+
+        {{#hosts}}
+            {{name}} [address = "{{ip}}"];
+        {{/hosts}}
+    }
+    {{/networks}}
+}

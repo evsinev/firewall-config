@@ -25,4 +25,17 @@ public class THost {
     public String getDefaultIp() {
         return interfaces.get(0).ip;
     }
+
+    @Override
+    public String toString() {
+        return "THost{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", justification='" + justification + '\'' +
+                ", gw='" + gw + '\'' +
+                ", group='" + group + '\'' +
+                ", interfaces=" + interfaces +
+                ", services=" + services +
+                '}';
+    }
 }
