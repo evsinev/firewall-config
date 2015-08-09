@@ -11,6 +11,11 @@ $TTL  43200
 )
 @     NS     {{domain}}.
 
+;;
+;; todo find DNS servers!
+;;
+{{domain}}. A 127.0.0.1
+
 {{#addresses}}
 {{name}}       IN A {{ip}}
 {{/addresses}}

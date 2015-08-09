@@ -2,13 +2,10 @@ package com.payneteasy.firewall;
 
 import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
-import com.payneteasy.firewall.dao.model.HostInterface;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
 import com.payneteasy.firewall.util.MustacheFilePrinter;
 import com.payneteasy.firewall.util.Networks;
-import com.payneteasy.firewall.util.ShellFilePrinter;
-import com.payneteasy.firewall.util.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +21,7 @@ import static com.payneteasy.firewall.util.Strings.padRight;
 public class MainBind {
 
     IConfigDao dao;
-    SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmm");
+    SimpleDateFormat format = new SimpleDateFormat("yyMMddHHmm");
 
     public MainBind(IConfigDao aDao) {
         dao = aDao;
@@ -61,14 +58,13 @@ public class MainBind {
         TreeMap<String, Collection<Address>> zones = new TreeMap<>();
 
         for (THost host : hosts) {
-            String name = host.name;
             for (TInterface iface : host.interfaces) {
                 String ip = iface.ip;
                 if(hasText(ip)) {
-                    String network = Networks.get24Network(ip);
+                    String network = Networks.get24NetworkReverse(ip);
                     Collection<Address> addresses = getAddresses(zones, network);
                     Address address = new Address();
-                    address.ip = ip;
+                    address.ip = Networks.get24MaskAddress(ip);
                     address.name = host.name;
                     addresses.add(address);
                 }
