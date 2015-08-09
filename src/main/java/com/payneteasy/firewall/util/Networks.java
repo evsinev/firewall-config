@@ -16,4 +16,8 @@ public class Networks {
         return leftIp.substring(0, left).equals(rightIp.substring(0, right));
     }
 
+    public static String get24Network(String aIp) {
+        int pos = aIp.lastIndexOf('.');
+        return aIp.substring(0, pos);
+    }
 }
