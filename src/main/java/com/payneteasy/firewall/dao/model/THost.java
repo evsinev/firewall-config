@@ -22,6 +22,8 @@ public class THost {
 
     public List<TService> services = Lists.newArrayList();
 
+    public String color;
+
     public String getDefaultIp() {
         return interfaces.get(0).ip;
     }

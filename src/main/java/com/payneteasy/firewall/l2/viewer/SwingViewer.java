@@ -76,6 +76,10 @@ public class SwingViewer {
     /** Creates a toolbar for this demo. */
     protected JToolBar createToolBar() {
         JToolBar toolbar = new JToolBar();
+
+        toolbar.add(new RouterAction(getView()));
+        toolbar.addSeparator();
+
         toolbar.add(new FitContentAction(getView()));
         toolbar.add(new ZoomAction(getView(), 1.25));
         toolbar.add(new ZoomAction(getView(), 0.8));
@@ -85,9 +89,10 @@ public class SwingViewer {
 
         toolbar.addSeparator();
 
-        toolbar.add(new HierarchicLayoutAction(getView()));
-        toolbar.add(new OrthogonalLayoutAction(getView()));
-        toolbar.add(new SmartOrganicLayoutAction(getView()));
+//        toolbar.add(new HierarchicLayoutAction(getView()));
+//        toolbar.add(new OrthogonalLayoutAction(getView()));
+//        toolbar.add(new SmartOrganicLayoutAction(getView()));
+
 
 
         return toolbar;

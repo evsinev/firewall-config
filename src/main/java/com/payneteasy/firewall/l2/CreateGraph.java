@@ -3,6 +3,7 @@ package com.payneteasy.firewall.l2;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
+import com.payneteasy.firewall.util.Strings;
 import y.base.Node;
 import y.view.Graph2D;
 import y.view.NodeRealizer;
@@ -53,7 +54,7 @@ public class CreateGraph {
         aConfig.listHosts().stream().filter(this::isL2Host).forEach(host -> {
             String name = host.name;
             System.out.println(name);
-            Node node = createGroup(aGraph, manager, name);
+            Node node = createGroup(aGraph, manager, name, host);
 
             for (TInterface iface : host.interfaces) {
                 if(iface.name.contains(".")) {
@@ -122,7 +123,7 @@ public class CreateGraph {
         return host.name + "/" + getInterfacename(iface);
     }
 
-    private Node createGroup(Graph2D aGraph, HierarchyManager manager, String name) {
+    private Node createGroup(Graph2D aGraph, HierarchyManager manager, String name, THost host) {
         Node node = manager.createGroupNode(aGraph);
         NodeRealizer nr = aGraph.getRealizer(node);
         if (nr instanceof ProxyShapeNodeRealizer) {
@@ -131,6 +132,9 @@ public class CreateGraph {
             pnr.getRealizer(1).setLabelText(name);
         } else {
             nr.setLabelText(name);
+            if(Strings.hasText(host.color)) {
+                nr.setFillColor(Color.decode(host.color));
+            }
         }
         return node;
     }
