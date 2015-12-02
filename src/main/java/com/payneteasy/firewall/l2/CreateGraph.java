@@ -148,15 +148,16 @@ public class CreateGraph {
         }
 
         Integer next = vertical.get(aHost.name);
-        if(isEvenPort(iface)) {
-            return next - 50;
-        }
-
         if(next == null) {
             y += 100;
             vertical.put(aHost.name, y);
             return y;
         }
+
+        if(isEvenPort(iface)) {
+            return next - 50;
+        }
+
 
         return next;
     }
