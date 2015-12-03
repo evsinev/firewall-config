@@ -19,7 +19,7 @@ import java.util.TreeSet;
 
 public class CreateGraph {
 
-    int y = 400;
+    int y = 1400;
 
     Map<String, Integer> horizontal = new HashMap<>();
     Map<String, Integer> vertical   = new HashMap<>();
