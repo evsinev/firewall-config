@@ -7,6 +7,7 @@ import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
 import com.payneteasy.firewall.util.Printer;
 import com.payneteasy.firewall.util.StringAppender;
+import com.payneteasy.firewall.util.Strings;
 import com.payneteasy.firewall.util.UniqueStringAppender;
 
 import java.io.File;
@@ -22,13 +23,27 @@ public class MainMikrotik {
     }
 
     public static void main(String[] args) throws IOException {
-        File configDir = new File(args[0]);
-        String host = args[1];
-        String vlan = args[2];
+        File   configDir = new File(args[0]);
+        String hostname  = args[1];
 
         IConfigDao configDao = new ConfigDaoYaml(configDir);
 
-        new MainMikrotik(configDao).showVlanConfig(host, vlan);
+        MainMikrotik generator = new MainMikrotik(configDao);
+        if(args.length >= 3) {
+            String vlan = args[2];
+            generator.showVlanConfig(hostname, vlan);
+        } else {
+            for (TInterface iface : configDao.getHostByName(hostname).interfaces) {
+                if("trunk".equals(iface.vlan)) {
+                    continue;
+                }
+
+                if(Strings.hasText(iface.vlan)) {
+                    generator.showVlanConfig(hostname, iface.vlan);
+                }
+            }
+        }
+
     }
 
 
@@ -44,6 +59,7 @@ public class MainMikrotik {
         out();
         out("/interface ethernet switch vlan");
         out("add ports=%s,%s vlan-id=%s", findTrunk(host), findVlanPorts(host, aVlan), aVlan);
+        out();
     }
 
     private String findVlanPorts(THost aHost, String aVlan) {
@@ -59,7 +75,7 @@ public class MainMikrotik {
                 }
             }
         }
-        return sb.toStringFailIfEmpty("Could not find interfaces with VLAN "+aVlan+" in host "+aHost.name);
+        return sb.toStringFailIfEmpty("Could not find interfaces with VLAN="+aVlan+" at host="+aHost.name);
     }
 
     private String findTrunk(THost aHost) {
@@ -68,7 +84,7 @@ public class MainMikrotik {
                 return iface.name;
             }
         }
-        throw new IllegalStateException("trunk port not found in "+aHost.name);
+        throw new IllegalStateException("trunk port not found at "+aHost.name);
     }
 
 }
