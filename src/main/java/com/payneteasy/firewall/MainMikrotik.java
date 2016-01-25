@@ -5,10 +5,7 @@ import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.HostInterface;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
-import com.payneteasy.firewall.util.Printer;
-import com.payneteasy.firewall.util.StringAppender;
-import com.payneteasy.firewall.util.Strings;
-import com.payneteasy.firewall.util.UniqueStringAppender;
+import com.payneteasy.firewall.util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,6 +43,9 @@ public class MainMikrotik {
 
     }
 
+    private void generateConfig(String aHostname, String aOutputFilename) {
+        MustacheFilePrinter out = new MustacheFilePrinter("");
+    }
 
     private void showVlanConfig(String aHostname, String aVlan) {
         THost host = dao.getHostByName(aHostname);

@@ -1,0 +1,7 @@
+# {{hostname}}
+
+/interface ethernet
+{{#interfaces}}
+set [ find default-name={{default_name}} ] master-port={{master_port}}
+{{/interfaces}}
+

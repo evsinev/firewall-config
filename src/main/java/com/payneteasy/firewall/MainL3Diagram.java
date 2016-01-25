@@ -2,6 +2,7 @@ package com.payneteasy.firewall;
 
 import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
+import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.l3.CreateL3Diagram;
 
 import java.io.File;
@@ -15,6 +16,9 @@ public class MainL3Diagram {
 
         IConfigDao configDao = new ConfigDaoYaml(configDir);
 
+        for (THost host : configDao.listHosts()) {
+            System.out.println("isalive "+host.name);
+        }
         CreateL3Diagram creator = new CreateL3Diagram();
         creator.create(configDao);
 
