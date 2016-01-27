@@ -9,15 +9,12 @@ import com.payneteasy.firewall.dao.model.TService;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.*;
+import com.payneteasy.firewall.util.Strings;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static java.lang.String.format;
 
@@ -45,18 +42,33 @@ public class PacketServiceImpl implements IPacketService {
                 try {
                     service = getServiceInfo(serviceConfig, destinationHost.interfaces);
                 } catch (Exception e) {
-                    throw new ConfigurationException("Can't create serviceConfig service for " + destinationHost.name + " and serviceConfig " + serviceConfig.url, e);
+                    throw new ConfigurationException("Error creating forward packets for host " + aHostname
+                            +": could't create serviceConfig service for destination host '" + destinationHost.name
+                            + "' and serviceConfig " + serviceConfig.url, e);
                 }
 
-                for (THost sourceHost : service.access) {
+                for (Access access : service.access) {
 
+                    THost sourceHost = access.host;
+
+                    // skip access for the same host
                     if(middleHost.name.equals(sourceHost.name)) continue;
                     if(sourceHost.name.equals(destinationHost.name)) continue;
+                    if (hasSameVipAddress(sourceHost, middleHost, destinationHost.gw)) continue;
 
                     Packet packet = new Packet();
                     packet.source_address = sourceHost.getDefaultIp();
                     packet.source_address_name = sourceHost.name;
-                    packet.input_interface = findInterface(middleHost, sourceHost);
+                    try {
+                        packet.input_interface = findInterface(middleHost, sourceHost);
+                    } catch (Exception e) {
+                        throw new ConfigurationException("Error creating forward packets for host " + aHostname
+                                + ": couldn't find input interface for service '"
+                                + service.appProtocol + "' at destination host '" + destinationHost.name
+                                + "' which accesses from '" + access + "'"
+                                + "\n Packet flow is: " + access + " --> " + middleHost.name + " --> " + destinationHost.name
+                                , e);
+                    }
 
                     packet.destination_address = service.address;
                     packet.destination_address_name = destinationHost.name;
@@ -112,6 +124,28 @@ public class PacketServiceImpl implements IPacketService {
         return ret;
     }
 
+    private boolean hasSameVipAddress(THost aLeft, THost aRight, String aGateway) {
+        boolean leftFound = false;
+        for (TInterface iface : aLeft.interfaces) {
+            if (aGateway.equals(iface.vip)) {
+                leftFound = true;
+                break;
+            }
+        }
+
+        if(!leftFound) {
+            return false;
+        }
+
+        for (TInterface iface : aRight.interfaces) {
+            if (aGateway.equals(iface.vip)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     @Override
     public List<InputPacket> getInputPackets(String aHostname) throws ConfigurationException {
         List<InputPacket> ret = new ArrayList<InputPacket>();
@@ -121,8 +155,17 @@ public class PacketServiceImpl implements IPacketService {
 
             UrlInfo serviceUrl = UrlInfo.parse(serviceConfig.url, targetHost.getDefaultIp(), theConfigDao);
 
-            for (THost sourceHost : createAccessList(serviceConfig.access)) {
+            List<Access> accessList;
+            try {
+                accessList = createAccessList("host " + aHostname, serviceConfig.access);
+            } catch (Exception e) {
+                throw new ConfigurationException("Could not create INPUT access list for host "+aHostname, e);
+            }
+
+            for (Access access : accessList) {
                 InputPacket packet = new InputPacket();
+
+                THost sourceHost = access.host;
 
                 packet.destination_port = serviceUrl.port;
                 packet.destination_address = serviceUrl.address;
@@ -158,6 +201,9 @@ public class PacketServiceImpl implements IPacketService {
         int max = -1 ;
         String maxAddress  = null;
         for (TInterface iface : interfaces) {
+            if(iface.skipIpAddress()) {
+                continue;
+            }
             int left = parseAddress(iface.ip);
             int count = calcEqualsBits(right, left);
 //            System.out.println(count+" " +Integer.toBinaryString(right) + " " + Integer.toBinaryString(left)+" "+left+" "+iface.ip);
@@ -167,7 +213,7 @@ public class PacketServiceImpl implements IPacketService {
             }
         }
         if(maxAddress==null) {
-            throw new ConfigurationException("Can't find address for "+aAddress+" in "+aHost.interfaces);
+            throw new ConfigurationException("Can't find address for "+aAddress+" in "+aHost.name);
         }
         return maxAddress;
     }
@@ -204,8 +250,11 @@ public class PacketServiceImpl implements IPacketService {
 
         for (THost destinationHost : theConfigDao.listHosts()) {
             for (TService serviceConfig : destinationHost.services) {
-                List<THost> access = createAccessList(serviceConfig.access);
-                for (THost sourceHost : access) {
+                List<Access> accesses = createAccessList("host " + destinationHost.name, serviceConfig.access);
+                for (Access access : accesses) {
+
+                    THost sourceHost = access.host;
+
                     if(aHostname.equals(sourceHost.name)) {
                         OutputPacket packet = new OutputPacket();
 
@@ -252,11 +301,26 @@ public class PacketServiceImpl implements IPacketService {
 
     private String findInterface(THost aMiddleHost, THost aConnectedHost) throws ConfigurationException {
         for (TInterface iface : aMiddleHost.interfaces) {
+            if(iface.ip == null) {
+                throw new ConfigurationException("Host '" + aMiddleHost.name + "' hasn't got ip address for interface '" + iface.name + "'");
+            }
+
+            if(iface.skipIpAddress()) {
+                continue;
+            }
+
             if(iface.ip.equals(aConnectedHost.gw)) {
                 return iface.name;
             }
+
+            if(aConnectedHost.gw.equals(iface.vip)) {
+                return iface.name;
+            }
         }
-        throw new ConfigurationException("Can't find interface on host "+aMiddleHost.name+" that connected to "+aConnectedHost.name);
+        throw new ConfigurationException(
+                "Can't find interface at host " + aMiddleHost.name + " which connected to " + aConnectedHost.name +"."
+                        + "\nCheck gateway (" + aConnectedHost.gw + ") at host " + aConnectedHost.name + " or ip addresses at host " + aMiddleHost.name
+        );
     }
 
     private ServiceInfo getServiceInfo(TService service, List<TInterface> aInterfaces) throws ConfigurationException {
@@ -274,7 +338,7 @@ public class PacketServiceImpl implements IPacketService {
         info.program = protocol.program;
         info.description = protocol.description;
         info.justification = protocol.justification;
-        info.access = createAccessList(service.access);
+        info.access = createAccessList("service "+service.name, service.access);
         if(service.nat!=null) {
             info.nat = UrlInfo.parse(service.nat, url.address, theConfigDao);
         }
@@ -282,20 +346,71 @@ public class PacketServiceImpl implements IPacketService {
         return info;
     }
 
-    private List<THost> createAccessList(List<String> aAccess) {
-        if (aAccess == null) throw new IllegalStateException("Access list parameter is empty");
+    private List<Access> createAccessList(String aSource, List<String> aAccess) {
+        if (aAccess == null) throw new IllegalStateException("Access list parameter is null for source " + aSource);
 
-        List<THost> list = new ArrayList<THost>();
+        Set<Access> list = new TreeSet<>();
         for (String hostname : aAccess) {
+            // group
             if (hostname.startsWith("group-")) {
                 String groupName = hostname.replaceAll("group-", "");
-                list.addAll(theConfigDao.findHostsByGroup(groupName));
-            } else {
+                list.addAll(convertToAccesses(theConfigDao.findHostsByGroup(groupName)));
+
+            // ordinary host
+            } else if(theConfigDao.isHostExist(hostname)) {
                 THost host = theConfigDao.getHostByName(hostname);
-                list.add(host);
+                list.add(new Access(host));
+
+            // service
+            } else if( isServiceRegistered(hostname) ) {
+                list.addAll(findHostsWithService(hostname));
+
+            // has pattern
+            } else if(hostname.endsWith("-*")) {
+                list.addAll(convertToAccesses(theConfigDao.getHostByPattern(hostname)));
+
+            } else {
+                throw new IllegalStateException("Host or service '" + hostname + "' not found in access list for "+aSource);
             }
         }
-        return list;
+        return new ArrayList<>(list);
+    }
+
+    private boolean isServiceRegistered(String aServiceName) {
+        aServiceName = aServiceName.replace(".service", "");
+        for (THost host : theConfigDao.listHosts()) {
+            for (TService service : host.services) {
+                if(aServiceName.equals(service.name)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private List<Access> findHostsWithService(String aServiceName) {
+        aServiceName = aServiceName.replace(".service", "");
+        List<Access> accessList = new ArrayList<>();
+        for (THost host : theConfigDao.listHosts()) {
+            for (TService service : host.services) {
+                if(aServiceName.equals(service.name)) {
+                    accessList.add(new Access(host, aServiceName));
+                }
+            }
+        }
+
+        if(accessList.isEmpty()) {
+            throw new IllegalStateException("No hosts with service " + aServiceName);
+        }
+        return accessList;
+    }
+
+    private Collection<Access> convertToAccesses(Collection<? extends THost> aHosts) {
+        List<Access> accesses = new ArrayList<>();
+        for (THost host : aHosts) {
+            accesses.add(new Access(host));
+        }
+        return accesses;
     }
 
     private final IConfigDao theConfigDao;

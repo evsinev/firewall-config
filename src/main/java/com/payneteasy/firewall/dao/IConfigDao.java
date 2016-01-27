@@ -2,6 +2,7 @@ package com.payneteasy.firewall.dao;
 
 import com.payneteasy.firewall.dao.model.*;
 import com.payneteasy.firewall.service.ConfigurationException;
+import com.payneteasy.firewall.service.model.Access;
 
 import java.io.FileNotFoundException;
 import java.util.Collection;
@@ -22,6 +23,8 @@ public interface IConfigDao {
 
     THost getHostByName(String aHostname);
 
+    boolean isHostExist(String aHostname);
+
     List<THost> listHosts();
 
     Collection<? extends THost> findHostsByGroup(String aGroupName);
@@ -33,4 +36,6 @@ public interface IConfigDao {
     String resolveDns(String aName) throws ConfigurationException;
 
     HostInterface findLinkedInterface(THost aHost, TInterface anInterface);
+
+    Collection<THost> getHostByPattern(String aPattern);
 }

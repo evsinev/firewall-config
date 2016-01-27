@@ -28,6 +28,8 @@ public class THost {
         return interfaces.get(0).ip;
     }
 
+    public String services_links;
+
     @Override
     public String toString() {
         return "THost{" +
@@ -38,6 +40,8 @@ public class THost {
                 ", group='" + group + '\'' +
                 ", interfaces=" + interfaces +
                 ", services=" + services +
+                ", color='" + color + '\'' +
+                ", services_links='" + services_links + '\'' +
                 '}';
     }
 }

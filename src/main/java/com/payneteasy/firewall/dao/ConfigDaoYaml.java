@@ -21,7 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.payneteasy.firewall.service.model.Access;
 import com.payneteasy.firewall.util.Networks;
+import com.payneteasy.firewall.util.Strings;
 import org.yaml.snakeyaml.Yaml;
 
 import static java.lang.String.format;
@@ -159,6 +161,8 @@ public class ConfigDaoYaml implements IConfigDao {
             host.group = aFile.getParentFile().getName();
 
             return host;
+        } catch (Exception e) {
+            throw new IOException("Could not read file " + aFile.getName() + ": " + e.getMessage(), e);
         } finally {
             in.close();
         }
@@ -169,6 +173,24 @@ public class ConfigDaoYaml implements IConfigDao {
         THost host = theMap.get(aHostname);
         if(host==null) throw new IllegalStateException("Host "+aHostname+" not found");
         return host;
+    }
+
+    @Override
+    public Collection<THost> getHostByPattern(String aPattern) {
+        String hostPrefix = aPattern.replace("-*", "");
+
+        List<THost> hosts = new ArrayList<>();
+        for (THost host : theHosts) {
+            if(host.name.startsWith(hostPrefix)) {
+                hosts.add(host);
+            }
+        }
+        return hosts;
+    }
+
+    @Override
+    public boolean isHostExist(String aHostname) {
+        return theMap.get(aHostname) != null;
     }
 
     @Override
@@ -203,6 +225,9 @@ public class ConfigDaoYaml implements IConfigDao {
         List<THost> ret = new ArrayList<THost>();
         for (THost host : theHosts) {
             for (TInterface iface : aInterfaces) {
+                if(Strings.isEmpty(host.gw)) {
+                    throw new IllegalStateException("No gateway for host "+host.name);
+                }
                 if(host.gw.equals(iface.ip) || host.gw.equals(iface.vip)) {
                     ret.add(host);
                 }
@@ -216,10 +241,20 @@ public class ConfigDaoYaml implements IConfigDao {
         String found = null;
         for (THost host : theHosts) {
             for (TInterface iface : host.interfaces) {
+
                 if(aName.equals(iface.dns)) {
                     if(found!=null) throw  new ConfigurationException(format("DNS name %s has two ip addresses %s and %s", aName, found, iface.ip));
                     found = iface.ip;
-
+                }
+                if(iface.vips!=null) {
+                    for (TVirtualIpAddress vip : iface.vips) {
+                        if(vip.names.contains(aName)) {
+                            if(found != null) {
+                                throw new ConfigurationException(format("DNS name %s has two ip addresses %s and %s", aName, found, vip.ip));
+                            }
+                            found = vip.ip;
+                        }
+                    }
                 }
             }
         }

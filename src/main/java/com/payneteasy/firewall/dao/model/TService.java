@@ -13,4 +13,21 @@ public class TService {
     public String nat;
     public String dip;
     public List<String> access;
+
+    public String name;
+    public String justification;
+
+    @Override
+    public String toString() {
+        return "TService{" +
+                "url='" + url + '\'' +
+                ", program='" + program + '\'' +
+                ", description='" + description + '\'' +
+                ", nat='" + nat + '\'' +
+                ", dip='" + dip + '\'' +
+                ", access=" + access +
+                ", name='" + name + '\'' +
+                ", justification='" + justification + '\'' +
+                '}';
+    }
 }

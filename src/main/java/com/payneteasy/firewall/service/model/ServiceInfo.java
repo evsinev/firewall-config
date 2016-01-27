@@ -1,8 +1,5 @@
 package com.payneteasy.firewall.service.model;
 
-import com.payneteasy.firewall.dao.model.THost;
-import com.payneteasy.firewall.dao.model.TProtocol;
-
 import java.util.List;
 
 /**
@@ -22,5 +19,5 @@ public class ServiceInfo {
 
     public UrlInfo nat;
 
-    public List<THost> access;
+    public List<Access> access;
 }
