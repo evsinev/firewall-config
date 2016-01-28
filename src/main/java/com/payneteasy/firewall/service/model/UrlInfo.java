@@ -61,7 +61,7 @@ public class UrlInfo {
             port = protocol.port;
         }
 
-        if(!Character.isDigit(address.charAt(0))) {
+        if(!"skip".equals(address) && !Character.isDigit(address.charAt(0))) {
             address = aConfigDao.resolveDns(address);
         }
         return new UrlInfo(name, port, address);

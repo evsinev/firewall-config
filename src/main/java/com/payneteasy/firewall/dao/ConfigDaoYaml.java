@@ -14,14 +14,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import com.payneteasy.firewall.service.model.Access;
 import com.payneteasy.firewall.util.Networks;
 import com.payneteasy.firewall.util.Strings;
 import org.yaml.snakeyaml.Yaml;
@@ -39,6 +33,7 @@ public class ConfigDaoYaml implements IConfigDao {
 
         theHosts = new ArrayList<THost>();
         loadHosts(theHosts, new File(aDir, "hosts"));
+        processServicesLinks(theHosts);
 
         theMap = createMap(theHosts);
 
@@ -47,6 +42,65 @@ public class ConfigDaoYaml implements IConfigDao {
         
         theProtocolsMap = new HashMap<String, TProtocol>();
         theProtocols = loadProtocols(new File(aDir, "protocols.yml"));
+    }
+
+    private void processServicesLinks(List<THost> aHosts) {
+        Map<String, TService> serviceMap = new HashMap<>();
+        for (THost host : aHosts) {
+            if(host.services == null) {
+                continue;
+            }
+            for (TService service : host.services) {
+                String name = service.name;
+
+                if(Strings.isEmpty(name)) {
+                    continue;
+                }
+
+                if(serviceMap.get(name) != null) {
+                    throw new IllegalStateException("Service '"+name+"' already exists");
+                }
+                serviceMap.put(name, service);
+            }
+        }
+
+        for (THost host : aHosts) {
+            if(Strings.isEmpty(host.services_links)) {
+                continue;
+            }
+
+            StringTokenizer st = new StringTokenizer(host.services_links, " \t;,");
+            while(st.hasMoreTokens()) {
+                String name = st.nextToken();
+                TService service = serviceMap.get(name);
+                if(service == null) {
+                    throw new IllegalStateException("There are no service '"+name+"' in any host. Check config at host "+host.name);
+                }
+                checkServiceAlreadyExist(service, host);
+
+                if(host.services == null) {
+                    host.services = new ArrayList<>();
+                }
+                host.services.add(service);
+            }
+        }
+    }
+
+    private void checkServiceAlreadyExist(TService aService, THost aHost) {
+        String name = aService.name;
+        if(aHost.services == null) {
+            return;
+        }
+
+        for (TService service : aHost.services) {
+            if (name.equals(service.name)) {
+                throw new IllegalStateException("Service '" + name + "' is already in the host '" + aHost.name + "'");
+            }
+
+            if(aService.url.equals(service.url)) {
+                throw new IllegalStateException("Service url '" + aService.url + "' is already in the host '" + aHost.name + "'");
+            }
+        }
     }
 
     private void loadPagesHistory(File aFile) throws IOException {
@@ -259,7 +313,7 @@ public class ConfigDaoYaml implements IConfigDao {
             }
         }
         if(found==null) {
-            throw new ConfigurationException(format("DNS name %s not found", aName));
+            throw new ConfigurationException(format("DNS name '%s' not found", aName));
         }
         return found;
     }

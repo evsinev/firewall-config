@@ -13,6 +13,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
+import static com.payneteasy.firewall.util.Strings.hasText;
 import static java.lang.String.format;
 
 /**
@@ -102,6 +103,9 @@ public class PacketServiceImpl implements IPacketService {
                     // not same interface
                     if(packet.input_interface.equals(packet.output_interface)) continue;
 
+                    packet.source_service = access.serviceName;
+                    packet.destination_service = serviceConfig.name;
+
                     ret.add(packet);
                 }
 
@@ -165,12 +169,18 @@ public class PacketServiceImpl implements IPacketService {
                 THost sourceHost = access.host;
 
                 packet.destination_port = serviceUrl.port;
+                if("skip".equals(serviceUrl.address)) {
+                    throw new ConfigurationException("Service " + serviceUrl.protocol + " has skip address at host " + aHostname
+                            + ". Check that default interface has no address 'skip' or "
+                            + " or specify ip address for the service."
+                    );
+                }
                 packet.destination_address = serviceUrl.address;
                 packet.input_interface  = findInterfaceByIp(serviceUrl.address, targetHost.interfaces, aHostname);
-                packet.app_protocol = serviceUrl.protocol;
+                packet.app_protocol = hasText(serviceConfig.name) ? serviceUrl.protocol + ":" + serviceConfig.name : serviceUrl.protocol;
                 packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
                 packet.source_address = findAddress(packet.destination_address, sourceHost);
-                packet.source_address_name = sourceHost.name;
+                packet.source_address_name = hasText(access.serviceName) ? sourceHost.name + ":" + access.serviceName : sourceHost.name;
 
                 ret.add(packet);
             }
@@ -263,6 +273,9 @@ public class PacketServiceImpl implements IPacketService {
                         packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
                         packet.destination_port = serviceUrl.port;
 
+                        packet.source_service = access.serviceName;
+                        packet.destination_service = serviceConfig.name;
+
                         ret.add(packet);
                     }
                 }
@@ -315,7 +328,7 @@ public class PacketServiceImpl implements IPacketService {
             }
 
             String interfaceName;
-            if( Strings.hasText(interfaceName = findInVirtualAddresses(aConnectedHost.gw, aMiddleHost.interfaces)) ) {
+            if( hasText(interfaceName = findInVirtualAddresses(aConnectedHost.gw, aMiddleHost.interfaces)) ) {
                 return interfaceName;
             }
         }
