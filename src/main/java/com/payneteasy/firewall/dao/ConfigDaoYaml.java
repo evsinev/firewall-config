@@ -248,9 +248,9 @@ public class ConfigDaoYaml implements IConfigDao {
                 }
                 if(iface.vips!=null) {
                     for (TVirtualIpAddress vip : iface.vips) {
-                        if(vip.names.contains(aName)) {
-                            if(found != null) {
-                                throw new ConfigurationException(format("DNS name %s has two ip addresses %s and %s", aName, found, vip.ip));
+                        if(vip.names != null && vip.names.contains(aName)) {
+                            if(found != null && !found.equals(vip.ip)) {
+                                throw new ConfigurationException(format("DNS name %s has two different ip addresses %s and %s", aName, found, vip.ip));
                             }
                             found = vip.ip;
                         }

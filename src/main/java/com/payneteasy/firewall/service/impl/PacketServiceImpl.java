@@ -2,10 +2,7 @@ package com.payneteasy.firewall.service.impl;
 
 import com.google.common.net.InetAddresses;
 import com.payneteasy.firewall.dao.IConfigDao;
-import com.payneteasy.firewall.dao.model.THost;
-import com.payneteasy.firewall.dao.model.TInterface;
-import com.payneteasy.firewall.dao.model.TProtocol;
-import com.payneteasy.firewall.dao.model.TService;
+import com.payneteasy.firewall.dao.model.*;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.*;
@@ -316,11 +313,35 @@ public class PacketServiceImpl implements IPacketService {
             if(aConnectedHost.gw.equals(iface.vip)) {
                 return iface.name;
             }
+
+            String interfaceName;
+            if( Strings.hasText(interfaceName = findInVirtualAddresses(aConnectedHost.gw, aMiddleHost.interfaces)) ) {
+                return interfaceName;
+            }
         }
         throw new ConfigurationException(
                 "Can't find interface at host " + aMiddleHost.name + " which connected to " + aConnectedHost.name +"."
                         + "\nCheck gateway (" + aConnectedHost.gw + ") at host " + aConnectedHost.name + " or ip addresses at host " + aMiddleHost.name
         );
+    }
+
+    private String findInVirtualAddresses(String aAddress, List<TInterface> interfaces) {
+        for (TInterface iface : interfaces) {
+            if(aAddress.equals(iface.vip)) {
+                return iface.name;
+            }
+
+            if(iface.vips == null) {
+                continue;
+            }
+
+            for (TVirtualIpAddress vip : iface.vips) {
+                if(aAddress.equals(vip.ip)) {
+                    return iface.name;
+                }
+            }
+        }
+        return null;
     }
 
     private ServiceInfo getServiceInfo(TService service, List<TInterface> aInterfaces) throws ConfigurationException {
