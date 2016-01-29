@@ -5,6 +5,7 @@ import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.HostInterface;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
+import com.payneteasy.firewall.dao.model.TVirtualIpAddress;
 import com.payneteasy.firewall.util.ShellFilePrinter;
 import com.payneteasy.firewall.util.Strings;
 
@@ -36,13 +37,12 @@ public class MainKeepalived {
         List<VrrpInterface> interfaces = new ArrayList<>();
         ShellFilePrinter p = new ShellFilePrinter("/etc/keepalived/keepalived.conf");
         for (TInterface iface : host.interfaces) {
-            if(Strings.hasText(iface.vip)) {
-                checkPairedInterface(host, iface);
+            if(Strings.hasText(iface.vip) || iface.vips != null) {
+                // checkPairedInterface(host, iface);
                 VrrpInterface vi = new VrrpInterface();
                 vi.instance = extractVlan(iface.name);
                 vi.interfaceName = iface.name;
-                vi.ip = iface.vip;
-                vi.netmask = iface.netmask;
+                vi.addresses = getVirtualAddresses(iface);
                 vi.priority = iface.getVrrpPriority();
 
                 interfaces.add(vi);
@@ -50,6 +50,23 @@ public class MainKeepalived {
         }
         p.mustache("keepalived.mustache", "interfaces", interfaces);
         p.close();
+    }
+
+    private List<VrrpAddress> getVirtualAddresses(TInterface iface) {
+        List<VrrpAddress> addresses = new ArrayList<>();
+        if(Strings.hasText(iface.vip)) {
+            addresses.add(new VrrpAddress(iface.vip));
+        }
+        if(iface.vips != null) {
+            for (TVirtualIpAddress vip : iface.vips) {
+                addresses.add(new VrrpAddress(vip.ip, vip.names));
+            }
+        }
+
+        if(addresses.isEmpty()) {
+            throw new IllegalStateException("No virtual address at the interface "+iface.name);
+        }
+        return addresses;
     }
 
     private String extractVlan(String aName) {
@@ -99,8 +116,20 @@ public class MainKeepalived {
         public String instance;
         public String interfaceName;
         public String priority;
-        public String ip;
-        public String netmask;
+        public List<VrrpAddress> addresses;
+    }
 
+    public static class VrrpAddress {
+        public String ip;
+        public String comment;
+
+        public VrrpAddress(String ip) {
+            this.ip = ip;
+        }
+
+        public VrrpAddress(String ip, String comment) {
+            this.ip = ip;
+            this.comment = comment;
+        }
     }
 }

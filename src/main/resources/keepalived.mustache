@@ -9,7 +9,7 @@ vrrp_instance V_{{instance}} {
     state             MASTER
     interface         {{interfaceName}}
     virtual_router_id {{instance}}
-    priority          {{priority}}
+{{=<% %>=}}    priority          {{vrrp_priority}}<%={{ }}=%>
     advert_int        1
 
     authentication {
@@ -18,7 +18,14 @@ vrrp_instance V_{{instance}} {
     }
 
     virtual_ipaddress {
-        {{ip}}/{{netmask}}
+      {{#addresses}}
+        {{#comment}}
+        {{ip}} # {{comment}}
+        {{/comment}}
+        {{^comment}}
+        {{ip}}
+        {{/comment}}
+      {{/addresses}}
     }
 }
 
