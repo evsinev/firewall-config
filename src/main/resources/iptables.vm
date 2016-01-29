@@ -27,6 +27,7 @@
 #
 # INPUT packets
 #
+-A INPUT -p icmp   -j ACCEPT
 #foreach( $p in $input-packets )
 # $p.source_address_name -> $p.app_protocol
 #if ($p.destination_port > 0 )
@@ -41,6 +42,7 @@
 #
 # OUTPUT packets
 #
+-A OUTPUT -p icmp -j ACCEPT
 #foreach( $p in $output-packets )
 # $p.app_protocol://$p.destination_address_name   $p.source_service $p.source_to_dest_service_sign $p.destination_service
 #if ($p.destination_port > 0 )
@@ -66,8 +68,9 @@
 #end
 
 #
-# forward packets 2
+# FORWARD packets 2
 #
+-A OUTPUT -p icmp  -j ACCEPT
 #foreach( $p in $forward-packets )
 # $p.source_address_name -> $p.app_protocol://$p.destination_address_name   $p.source_service $p.source_to_dest_service_sign $p.destination_service
 #if ($p.destination_port > 0 )
