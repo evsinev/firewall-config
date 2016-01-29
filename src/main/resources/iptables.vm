@@ -52,8 +52,21 @@
 
 #end
 
+#if ($vrrp-packets.size() > 0)
 #
-# forward packets
+# VRRP
+# Drop  input packet:IN=eth0.204  SRC=10.2.4.12 DST=224.0.0.18 PROTO=112
+# Drop output packet:OUT=eth0.204 SRC=10.2.4.11 DST=224.0.0.18 PROTO=112
+#foreach( $p in $vrrp-packets )
+# $p.local_interface -> $p.remote_host.$p.remote_interface
+-A INPUT  -p vrrp -i $p.local_interface -s $p.remote_address -d 224.0.0.0/8 -j ACCEPT
+-A OUTPUT -p vrrp -o $p.local_interface -s $p.local_address  -d 224.0.0.0/8 -j ACCEPT
+
+#end
+#end
+
+#
+# forward packets 2
 #
 #foreach( $p in $forward-packets )
 # $p.source_address_name -> $p.app_protocol://$p.destination_address_name   $p.source_service $p.source_to_dest_service_sign $p.destination_service

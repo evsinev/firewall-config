@@ -90,11 +90,13 @@ public class PacketServiceImpl implements IPacketService {
                     if(isPublicAddress(sourceHost.getDefaultIp())) {
                         if(packet.type!=null) {
                             throw new ConfigurationException(format("Trying to config both SNAT and DNAT with %s(%s) -> %s(%s)", sourceHost.name, sourceHost.getDefaultIp(), destinationHost.name, destinationHost.getDefaultIp()));
-                        } else {
-                            packet.type = "DNAT";
-                            packet.destination_nat_address = service.nat.address;
-                            packet.destination_nat_port    = service.nat.port;
                         }
+                        if(service.nat == null) {
+                            throw new ConfigurationException("No nat for service "+service.appProtocol + " at host "+destinationHost.name);
+                        }
+                        packet.type = "DNAT";
+                        packet.destination_nat_address = service.nat.address;
+                        packet.destination_nat_port    = service.nat.port;
 
                     }
 
@@ -247,6 +249,79 @@ public class PacketServiceImpl implements IPacketService {
         } catch (UnknownHostException e) {
             throw new ConfigurationException("Can't parse ip address "+aIp);
         }
+    }
+
+    @Override
+    public List<VrrpPacket> getVrrpPackets(String aHostname) {
+        THost localHost = theConfigDao.getHostByName(aHostname);
+        List<VrrpPacket> packets = new ArrayList<>();
+
+        // fills local address and interface
+        for (TInterface iface : localHost.interfaces) {
+            if(hasText(iface.vip)) {
+                packets.add(VrrpPacket.createWithLocal(iface.ip, iface.name, iface.vip));
+            }
+            if(iface.vips != null) {
+                for (TVirtualIpAddress vip : iface.vips) {
+                    packets.add(VrrpPacket.createWithLocal(iface.ip, iface.name, vip.ip));
+                }
+            }
+        }
+
+        // finds paired remote address
+        for (VrrpPacket packet : packets) {
+            findPairedRemoteVirtualAddress(packet.virtual_address, localHost.name, packet);
+        }
+        return packets;
+    }
+
+    private void findPairedRemoteVirtualAddress(String aAddress, String aIgnoreHost, VrrpPacket aPacket) {
+        TInterface foundInterface = null;
+        THost foundHost = null;
+
+        for (THost host : theConfigDao.listHosts()) {
+            if(host.name.equals(aIgnoreHost)) {
+                continue;
+            }
+
+            for (TInterface iface : host.interfaces) {
+                if(aAddress.equals(iface.ip)) {
+                    throw new IllegalStateException(format("Virtual ip address '%s' has pair with bare interface %s.%s", aAddress, host.name, iface.name));
+                }
+
+                if(aAddress.equals(iface.vip)) {
+                    if(foundInterface != null) {
+                        throw new IllegalStateException(format("There are two additional virtual addresses %s.%s and %s.%s"
+                                , foundHost.name, foundInterface.name, host.name, iface.name));
+                    }
+                    foundInterface = iface;
+                    foundHost = host;
+                }
+
+                if(iface.vips!=null) {
+                    for (TVirtualIpAddress vip : iface.vips) {
+                        if(aAddress.equals(vip.ip)) {
+                            if(foundInterface != null) {
+                                throw new IllegalStateException(format("There are two additional virtual addresses %s.%s and %s.%s"
+                                        , foundHost.name, foundInterface.name, host.name, iface.name));
+                            }
+                            foundInterface = iface;
+                            foundHost = host;
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        if(foundInterface == null) {
+             throw new IllegalStateException("There no any additional virtual interface with ip address "+aAddress);
+        }
+
+        aPacket.remote_host      = foundHost.name;
+        aPacket.remote_interface = foundInterface.name;
+        aPacket.remote_address   = foundInterface.ip;
     }
 
     @Override
