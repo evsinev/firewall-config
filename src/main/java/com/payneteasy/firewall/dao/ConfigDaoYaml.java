@@ -282,12 +282,24 @@ public class ConfigDaoYaml implements IConfigDao {
                 if(Strings.isEmpty(host.gw)) {
                     throw new IllegalStateException("No gateway for host "+host.name);
                 }
-                if(host.gw.equals(iface.ip) || host.gw.equals(iface.vip)) {
+                if(host.gw.equals(iface.ip) || host.gw.equals(iface.vip) || findIpInVirtualInterfaces(host.gw, iface.vips)) {
                     ret.add(host);
                 }
             }
         }
         return ret;
+    }
+
+    private boolean findIpInVirtualInterfaces(String aAddress, List<TVirtualIpAddress> aVips) {
+        if(aVips == null) {
+            return false;
+        }
+        for (TVirtualIpAddress vip : aVips) {
+            if(aAddress.equals(vip.ip)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
