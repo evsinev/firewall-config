@@ -6,10 +6,7 @@ import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.impl.PacketServiceImpl;
-import com.payneteasy.firewall.service.model.InputPacket;
-import com.payneteasy.firewall.service.model.OutputPacket;
-import com.payneteasy.firewall.service.model.Packet;
-import com.payneteasy.firewall.service.model.VrrpPacket;
+import com.payneteasy.firewall.service.model.*;
 import com.payneteasy.firewall.util.VelocityBuilder;
 
 import java.io.File;
@@ -53,6 +50,7 @@ public class Main {
         List<InputPacket> inputs = packetService.getInputPackets(host);
         List<OutputPacket> outputs = packetService.getOutputPackets(host);
         List<VrrpPacket> vrrpPackets = packetService.getVrrpPackets(host);
+        List<LinkedVrrpPacket> linkedVrrpPackets = packetService.getLinkedVrrpPackets(host);
 
         VelocityBuilder velocity = new VelocityBuilder();
         velocity.add("generated-date", new Date());
@@ -61,6 +59,7 @@ public class Main {
         velocity.add("input-packets", inputs);
         velocity.add("output-packets", outputs);
         velocity.add("vrrp-packets", vrrpPackets);
+        velocity.add("linked-vrrp-packets", linkedVrrpPackets);
 
         PrintWriter out = new PrintWriter(new FileWriter(new File(aDir, host)));
         try {

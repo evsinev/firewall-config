@@ -6,6 +6,7 @@ import com.payneteasy.firewall.dao.model.*;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.*;
+import com.payneteasy.firewall.util.Networks;
 import com.payneteasy.firewall.util.Strings;
 
 import java.net.Inet4Address;
@@ -273,6 +274,65 @@ public class PacketServiceImpl implements IPacketService {
             findPairedRemoteVirtualAddress(packet.virtual_address, localHost.name, packet);
         }
         return packets;
+    }
+
+    public List<LinkedVrrpPacket> getLinkedVrrpPackets(String aHostname) {
+        THost localHost = theConfigDao.getHostByName(aHostname);
+        List<LinkedVrrpPacket> packets = new ArrayList<>();
+
+        // linked hosts with vrrp
+        for (TInterface localInterface : localHost.interfaces) {
+            HostInterface linkedHostInterface = findConnectedInterface(localInterface);
+
+            if(linkedHostInterface == null) {
+                continue;
+            }
+
+            if(hasText(linkedHostInterface.iface.vip) || linkedHostInterface.iface.vips != null) {
+                LinkedVrrpPacket packet = new LinkedVrrpPacket();
+                packet.local_interface  = localInterface.name;
+                packet.remote_address   = linkedHostInterface.iface.ip;
+                packet.remote_host      = linkedHostInterface.host.name;
+                packet.virtual_address  = linkedHostInterface.iface.vip; // todo add support for vips
+                packets.add(packet);
+            }
+        }
+
+        return packets;
+    }
+
+    private HostInterface findConnectedInterface(TInterface aLeftInterface) {
+        for (THost rightHost : theConfigDao.listHosts()) {
+            if(hasIpaddress(rightHost.gw, aLeftInterface)) {
+                for (TInterface rightInterface : rightHost.interfaces) {
+                    if(Networks.isInNetwork(aLeftInterface, rightInterface)) {
+                        return new HostInterface(rightHost, rightInterface);
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean hasIpaddress(String aAddress, TInterface aInterface) {
+        if(aAddress.equals(aInterface.ip)) {
+            return true;
+        }
+
+        if(aInterface.vip!= null && aAddress.equals(aInterface.vip)) {
+            return true;
+        }
+
+        if(aInterface.vips != null) {
+            for (TVirtualIpAddress vip : aInterface.vips) {
+                if(aAddress.equals(vip.ip)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private void findPairedRemoteVirtualAddress(String aAddress, String aIgnoreHost, VrrpPacket aPacket) {
