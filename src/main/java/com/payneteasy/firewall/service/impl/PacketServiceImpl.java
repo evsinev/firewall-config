@@ -372,7 +372,7 @@ public class PacketServiceImpl implements IPacketService {
 
     private String findInterfaceByIp(String aAddress, List<TInterface> aInterfaces, String aHostname) throws ConfigurationException {
         for (TInterface iface : aInterfaces) {
-            if(aAddress.equals(iface.ip)) {
+            if(aAddress.equals(iface.ip) || aAddress.equals(iface.vip) ) {
                 return iface.name;
             }
         }
