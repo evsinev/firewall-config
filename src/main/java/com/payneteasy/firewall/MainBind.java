@@ -4,6 +4,8 @@ import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
+import com.payneteasy.firewall.dao.model.TService;
+import com.payneteasy.firewall.dao.model.TVirtualIpAddress;
 import com.payneteasy.firewall.util.MustacheFilePrinter;
 import com.payneteasy.firewall.util.Networks;
 
@@ -43,7 +45,30 @@ public class MainBind {
         Collection<Zone> zones = new TreeSet<>();
         createDirectZone(aDomainName, new File(aOutputDir, aDomainName+".zone"), zones);
         createReverseZone(aDomainName, aOutputDir, zones);
+        createServiceZone("static", new File(aOutputDir,"static.zone"), zones);
         createZonesConf(aDomainName, zones, new File(aOutputDir, "zones.conf"));
+    }
+
+    private void createServiceZone(String aDomainName, File aZoneFile, Collection<Zone> aZones) {
+        Collection<Address> addresses = new ArrayList<>();
+
+        for (THost host : dao.findHostsByGroup("internal")) {
+            for (TService service : host.services) {
+                if(hasText(service.name)) {
+                    Address address = new Address();
+                    address.ip = host.getDefaultIp();
+                    address.name = service.name;
+                    addresses.add(address);
+                }
+            }
+        }
+
+        MustacheFilePrinter out = new MustacheFilePrinter("bind-zone.mustache");
+        addHeader(aDomainName, out);
+        out.add("addresses", addresses);
+        out.write(aZoneFile);
+
+        aZones.add(new Zone(aDomainName, aZoneFile.getName()));
     }
 
     private void createZonesConf(String aDomainName, Collection<Zone> aZones, File aFile) {
@@ -58,16 +83,13 @@ public class MainBind {
         TreeMap<String, Collection<Address>> zones = new TreeMap<>();
 
         for (THost host : hosts) {
-            for (TInterface iface : host.interfaces) {
-                String ip = iface.ip;
-                if(hasText(ip)) {
-                    String network = Networks.get24NetworkReverse(ip);
-                    Collection<Address> addresses = getAddresses(zones, network);
-                    Address address = new Address();
-                    address.ip = Networks.get24MaskAddress(ip);
-                    address.name = host.name;
-                    addresses.add(address);
-                }
+            for(String ip : getIpAddresses(host.interfaces)) {
+                String network = Networks.get24NetworkReverse(ip);
+                Collection<Address> addresses = getAddresses(zones, network);
+                Address address = new Address();
+                address.ip = Networks.get24MaskAddress(ip);
+                address.name = host.name;
+                addresses.add(address);
             }
         }
 
@@ -81,6 +103,25 @@ public class MainBind {
 
             aZones.add(new Zone(entry.getKey()+".in-addr.arpa", output.getName()));
         }
+    }
+
+    private List<String> getIpAddresses(List<TInterface> interfaces) {
+        ArrayList<String> list = new ArrayList<>();
+        for (TInterface iface : interfaces) {
+            if(hasText(iface.ip) && !iface.ip.equals("skip")) {
+                list.add(iface.ip);
+            }
+            if(hasText(iface.vip)) {
+                list.add(iface.vip);
+            }
+
+            if(iface.vips != null) {
+                for (TVirtualIpAddress vip : iface.vips) {
+                    list.add(vip.ip);
+                }
+            }
+        }
+        return list;
     }
 
     private void addHeader(String aDomainName, MustacheFilePrinter out) {
@@ -122,10 +163,11 @@ public class MainBind {
         Collection<? extends THost> hosts = dao.findHostsByGroup("internal");
         int max = maxLength(hosts, aObj -> aObj.name);
         for (THost host : hosts) {
-            if(hasText(host.getDefaultIp())) {
+            String ip = host.getDefaultIp();
+            if(hasText(ip) && !ip.equals("skip")) {
                 Address address = new Address();
                 address.name = padRight(host.name, max);
-                address.ip   = host.getDefaultIp();
+                address.ip   = ip;
                 ret.add(address);
             } else {
                 System.err.println("Host "+host.name+" hasn't got default ip address");
