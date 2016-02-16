@@ -44,6 +44,7 @@
             <groupId>com.yworks</groupId>
             <artifactId>yfiles</artifactId>
             <version>2.12</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
