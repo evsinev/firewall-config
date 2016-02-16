@@ -4,10 +4,8 @@ public interface IWikiService {
     
     String createDetailsPage(String hostName) throws ConfigurationException;
 
-    String createExternalServersPage();
-    
-    String createInternalServersPage();
-    
+    String createServersPage(String aName);
+
     String createPacketsPage(String hostName) throws ConfigurationException;
     
     String createServicesPage();

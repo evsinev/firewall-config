@@ -13,7 +13,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 
 /**
- *
+ * Uploads wiki pages from a dir to a redmine server
  */
 public class MainWikiDir {
     public static void main(String[] args) throws KeyManagementException, NoSuchAlgorithmException, IOException {

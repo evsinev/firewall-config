@@ -1,5 +1,8 @@
 package com.payneteasy.firewall.dao.model;
 
+import com.payneteasy.firewall.util.Networks;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,6 +48,24 @@ public class TInterface {
 
     public boolean skipIpAddress() {
         return "skip".equals(ip);
+    }
+
+    public List<String> getAllIpAddresses() {
+        List<String> ips = new ArrayList<>();
+        if(Networks.isIpAddress(ip)) {
+            ips.add(ip);
+        }
+        if(Networks.isIpAddress(vip)) {
+            ips.add(vip);
+        }
+        if(vips != null) {
+            for (TVirtualIpAddress virtualIpAddress : vips) {
+                if(Networks.isIpAddress(virtualIpAddress.ip)) {
+                    ips.add(virtualIpAddress.ip);
+                }
+            }
+        }
+        return ips;
     }
 
     @Override

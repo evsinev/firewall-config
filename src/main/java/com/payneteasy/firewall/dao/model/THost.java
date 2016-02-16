@@ -1,6 +1,7 @@
 package com.payneteasy.firewall.dao.model;
 
 import com.google.common.collect.Lists;
+import com.payneteasy.firewall.util.Networks;
 
 import java.util.List;
 
@@ -25,7 +26,17 @@ public class THost {
     public String color;
 
     public String getDefaultIp() {
-        return interfaces.get(0).ip;
+        String ip = interfaces.get(0).ip;
+        if(Networks.isIpAddress(ip)) {
+            return ip;
+        }
+
+        for (TInterface iface : interfaces) {
+            if(Networks.isIpAddress(iface.ip)) {
+                return iface.ip;
+            }
+        }
+        throw new IllegalStateException("There no default ip address for host "+name);
     }
 
     public String services_links;

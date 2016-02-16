@@ -21,7 +21,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-public class RedmineEasyClient {
+public class RedmineEasyClient implements IRedmineClient {
 
     final class TrustAllTrustManager implements X509TrustManager {
         @Override public void checkClientTrusted(X509Certificate[] x509Certificates, String s)
@@ -60,9 +60,13 @@ public class RedmineEasyClient {
         this.url = url;
     }
 
-    public final void executeDeletePage(String pageName) throws IOException {
+    public final void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment) throws IOException {
+        execute(pageName, title, text, comment, null);
+    }
+
+    private void executeDeletePage(String pageName) throws IOException {
         pageName = normalizePageName(pageName);
-        
+
         GenericUrl genericUrl = new GenericUrl(url);
         genericUrl.getPathParts().add(pageName);
         HttpRequest httpRequest = requestFactory.buildDeleteRequest(genericUrl);
@@ -73,15 +77,11 @@ public class RedmineEasyClient {
         }
     }
 
-    public final void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment) throws IOException {
-        execute(pageName, title, text, comment, null);
-    } 
-    
-    public final void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment, Integer version) throws IOException {
+    private void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment, Integer version) throws IOException {
         execute(pageName, title, text, comment, version);
     }
 
-    public final boolean executeIsPageExists(String pageName) throws IOException {
+    private boolean executeIsPageExists(String pageName) throws IOException {
         pageName = normalizePageName(pageName);
         
         GenericUrl genericUrl = new GenericUrl(url);
@@ -93,6 +93,9 @@ public class RedmineEasyClient {
     
     private void execute(String pageName, String title, String text, String comment, Integer version) throws IOException {
         pageName = normalizePageName(pageName);
+
+        long startTime = System.currentTimeMillis();
+        System.out.print(pageName + " ... ");
         
         WikiPageXml wikiPageXml = new WikiPageXml();
         wikiPageXml.setComments(comment);
@@ -111,6 +114,11 @@ public class RedmineEasyClient {
 
         HttpResponse response = httpRequest.execute();
         switch (response.getStatusCode()) {
+            case 200:
+            case 201:
+                System.out.println("OK in "+(System.currentTimeMillis() - startTime)+" ms");
+                break;
+
             case 409:
                 throw new IOException("Conflict: occurs when trying to update a stale page. "
                         + "Response [statusCode: " + response.getStatusCode() + "; statusMessage: " + response.getStatusMessage());
@@ -118,10 +126,10 @@ public class RedmineEasyClient {
                 throw new IOException("Unprocessable Entity: page was not saved due to validation failures "
                         + "(response body contains the error messages)"
                         + "Response [statusCode: " + response.getStatusCode() + "; statusMessage: " + response.getStatusMessage());
-            case 200:
-            case 201:
+
             default:
                 // do nothing
+                throw new IllegalStateException("Unknown error: "+response.getStatusCode()+" : "+response.getStatusMessage());
         }
     }
 }

@@ -107,14 +107,6 @@ public class WikiServiceImpl implements IWikiService {
         return sb.toString();
     }
 
-    @Override public String createExternalServersPage() {    
-        return createServersPage("external");
-    }
-
-    @Override public String createInternalServersPage() {
-        return createServersPage("internal");
-    }
-
     @Override public String createPacketsPage(String hostName) throws ConfigurationException {
         StringBuilder sb = new StringBuilder();
         appendInterfaces(sb, hostName);
@@ -195,15 +187,21 @@ public class WikiServiceImpl implements IWikiService {
         sb.append("\nh2. Services and input packets\n\n");
         sb.append("|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|\n");
         for (InputPacketKey key : inputs.keySet()) {
-            TProtocol protocol = configDao.findProtocol(key.appProtocol);
             sb.append('|').append(key.appProtocol);
             sb.append('|').append(key.inputInterface);
             sb.append('|').append(key.destinationAddress);
             sb.append('|').append(key.destinationPort != -1 ? key.destinationPort : "");
             sb.append('|').append(collectionToString(inputs.get(key)));
+
+            TProtocol protocol = configDao.findProtocol(clearProtocol(key.appProtocol));
             sb.append('|').append(protocol.description);
             sb.append('|').append(protocol.justification).append("|\n");
         }        
+    }
+
+    private String clearProtocol(String aProtocolName) {
+        int pos = aProtocolName.indexOf(':');
+        return pos > 0 ? aProtocolName.substring(0, pos) : aProtocolName;
     }
 
     private void appendOutputTable(StringBuilder sb, String hostName) throws ConfigurationException {
@@ -226,7 +224,7 @@ public class WikiServiceImpl implements IWikiService {
         }        
     }
 
-    private String createServersPage(final String group) {
+    public String createServersPage(final String group) {
         Iterator<THost> externalHosts = Iterators.filter(configDao.listHosts().iterator(), new Predicate<THost>() {
             @Override public boolean apply(THost input) {
                 return group.equals(input.group);

@@ -207,6 +207,10 @@ public class PacketServiceImpl implements IPacketService {
         if(interfaces==null || interfaces.isEmpty()) throw new IllegalStateException("No interfaces for host "+aHost.name);
         if(interfaces.size()==1) return aHost.getDefaultIp();
 
+        if(aAddress.startsWith("0.0.0.0")) {
+            return aHost.getDefaultIp();
+        }
+
         int right = parseAddress(aAddress);
         int max = -1 ;
         String maxAddress  = null;
@@ -241,6 +245,11 @@ public class PacketServiceImpl implements IPacketService {
 
     private static int parseAddress(String aIp) throws ConfigurationException {
         try {
+            int pos = aIp.indexOf('/');
+            if(pos > 0) {
+                aIp = aIp.substring(0, pos);
+            }
+
             InetAddress address = Inet4Address.getByName(aIp);
             byte[] bytes = new byte[8];
             System.arraycopy(address.getAddress(), 0, bytes, 4, 4);
@@ -248,7 +257,7 @@ public class PacketServiceImpl implements IPacketService {
 
             return InetAddresses.coerceToInteger(address);
         } catch (UnknownHostException e) {
-            throw new ConfigurationException("Can't parse ip address "+aIp);
+            throw new ConfigurationException("Can't parse ip address "+aIp, e);
         }
     }
 
@@ -440,8 +449,8 @@ public class PacketServiceImpl implements IPacketService {
     }
 
     private boolean isPublicAddress(String aAddress) {
-        return
-                   !aAddress.startsWith("10.")
+        return  Networks.isIpAddress(aAddress)
+                && !aAddress.startsWith("10.")
                 && !aAddress.startsWith("172.16")
                 && !aAddress.startsWith("192.168");
     }

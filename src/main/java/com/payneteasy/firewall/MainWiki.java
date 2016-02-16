@@ -1,13 +1,13 @@
 package com.payneteasy.firewall;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.hash.HashCodes;
 import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TPageHistory;
+import com.payneteasy.firewall.redmine.IRedmineClient;
 import com.payneteasy.firewall.redmine.RedmineEasyClient;
+import com.payneteasy.firewall.redmine.RedmineFileStoreClient;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.IWikiService;
@@ -44,7 +44,9 @@ public class MainWiki {
         IPacketService packetService = new PacketServiceImpl(configDao);
         IWikiService wikiService = new WikiServiceImpl(configDao, packetService);
 
-        RedmineEasyClient client = new RedmineEasyClient(redmineUrl, redmineKey);
+        IRedmineClient client = redmineUrl.startsWith("http")
+                ? new RedmineEasyClient(redmineUrl, redmineKey)
+                : new RedmineFileStoreClient(redmineUrl);
 
         String pageName;
         String pageTitle;
@@ -67,16 +69,23 @@ public class MainWiki {
                 LOGGER.log(Level.WARNING, "Cannot process host [" + hostName + "].", ex);
             }
         }
-        
-        content = wikiService.createExternalServersPage();
-        pageName = "external_group";
-        pageTitle = "External servers";
-        needHistoryUpdate |= createOrUpdateWikiPage(client, configDao, force, pageName, pageTitle, content);
 
-        content = wikiService.createInternalServersPage();
-        pageName = "internal_group";
-        pageTitle = "Internal servers";
-        needHistoryUpdate |= createOrUpdateWikiPage(client, configDao, force, pageName, pageTitle, content);
+        for (String group : configDao.listGroups()) {
+            content = wikiService.createServersPage(group);
+            pageName = group + "_group";
+            pageTitle = group + " servers";
+            needHistoryUpdate |= createOrUpdateWikiPage(client, configDao, force, pageName, pageTitle, content);
+        }
+
+//        content = wikiService.createExternalServersPage();
+//        pageName = "external_group";
+//        pageTitle = "External servers";
+//        needHistoryUpdate |= createOrUpdateWikiPage(client, configDao, force, pageName, pageTitle, content);
+//
+//        content = wikiService.createInternalServersPage();
+//        pageName = "internal_group";
+//        pageTitle = "Internal servers";
+//        needHistoryUpdate |= createOrUpdateWikiPage(client, configDao, force, pageName, pageTitle, content);
         
         content = wikiService.createServicesPage();
         pageName = "services";
@@ -88,8 +97,8 @@ public class MainWiki {
         }
     }
 
-    private static boolean createOrUpdateWikiPage(RedmineEasyClient client, IConfigDao configDao, boolean force,
-            String pageName, String pageTitle, String content) throws IOException {
+    private static boolean createOrUpdateWikiPage(IRedmineClient client, IConfigDao configDao, boolean force,
+                                                  String pageName, String pageTitle, String content) throws IOException {
         long hashCode = content.hashCode();
         TPageHistory pageHistory = configDao.findPageHistory(pageName);
         boolean createOrUpdate = force || pageHistory.pageHash != hashCode;

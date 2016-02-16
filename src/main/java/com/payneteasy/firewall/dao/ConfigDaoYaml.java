@@ -44,6 +44,11 @@ public class ConfigDaoYaml implements IConfigDao {
         theProtocols = loadProtocols(new File(aDir, "protocols.yml"));
     }
 
+    @Override
+    public List<String> listGroups() {
+        return Arrays.asList(new File(theDir, "hosts").list( (dir, name) -> dir.isDirectory() && !name.startsWith(".")));
+    }
+
     private void processServicesLinks(List<THost> aHosts) {
         Map<String, TService> serviceMap = new HashMap<>();
         for (THost host : aHosts) {
@@ -239,6 +244,20 @@ public class ConfigDaoYaml implements IConfigDao {
                 hosts.add(host);
             }
         }
+        return hosts;
+    }
+
+    @Override
+    public Collection<THost> listHostsByFilter(String ... aArguments) {
+        List<THost> hosts = new ArrayList<>();
+        for (String group : aArguments) {
+            hosts.addAll(findHostsByGroup(group));
+        }
+
+        for (String host : aArguments) {
+            hosts.addAll(getHostByPattern(host));
+        }
+
         return hosts;
     }
 

@@ -9,10 +9,7 @@ import com.payneteasy.firewall.dao.model.TInterface;
 
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CreateL3Diagram {
 
@@ -24,6 +21,7 @@ public class CreateL3Diagram {
     }
 
     private List<Network> convertToNetWorks(Map<String, List<THost>> map) {
+
         Map<String, String> names = new HashMap<>();
         names.put("10.2.1.0", "dmz-public");
         names.put("10.2.2.0", "dmz-out");
@@ -36,10 +34,15 @@ public class CreateL3Diagram {
         names.put("10.2.22.0", "int-db");
         names.put("10.2.23.0", "int-admin");
         names.put("10.2.24.0", "int-management");
+        names.put("10.2.25.0", "int-cassandra");
 
         names.put("10.6.0.0", "ipmi");
 
+        names.put("10.8.0.0", "vpn-network");
+        names.put("10.7.0.0", "vpn-ipmi");
+
         names.put("0.0.0.0", "internet");
+        names.put("185.15.175.0", "internet");
 
 
         List<Network> nets = new ArrayList<>();
@@ -50,6 +53,20 @@ public class CreateL3Diagram {
             net.hosts = convertToHosts(net.address, entry.getValue());
             nets.add(net);
         }
+
+        Collections.sort(nets, (left, right) -> {
+            if(left.name.equals("internet")) {
+                return -1;
+            }
+
+            if(right.name.equals("internet")) {
+                return 1;
+            }
+
+            return left.name.compareTo(right.name);
+        });
+//        sortNetworks(nets);
+
         return nets;
     }
 
@@ -60,7 +77,7 @@ public class CreateL3Diagram {
             h.name = host.name;
             StringBuilder sb = new StringBuilder();
             for (TInterface iface : host.interfaces) {
-                    if (isInNetwork(iface.ip, aNetworkAddress)) {
+                    if (isInNetwork(iface, aNetworkAddress)) {
                         if (sb.length() > 0) {
                             sb.append(", ");
                         }
@@ -73,14 +90,16 @@ public class CreateL3Diagram {
         return ret;
     }
 
-    private boolean isInNetwork(String aIp, String aNetworkAddress) {
-        if(aIp==null) return false;
+    private boolean isInNetwork(TInterface aInterface, String aNetworkAddress) {
+        for (String ip : aInterface.getAllIpAddresses()) {
+            int left = ip.lastIndexOf('.');
+            int right = aNetworkAddress.lastIndexOf('.');
 
-        int left = aIp.lastIndexOf('.');
-        int right = aNetworkAddress.lastIndexOf('.');
-
-        return aIp.substring(0, left).equals(aNetworkAddress.substring(0, right));
-
+            if(ip.substring(0, left).equals(aNetworkAddress.substring(0, right))) {
+                return true;
+            };
+        }
+        return false;
     }
 
     private void printNetwork(List<Network> aNets) {
@@ -92,8 +111,9 @@ public class CreateL3Diagram {
 
             mustache.execute(new PrintWriter(System.out), scope).flush();
             mustache.execute(new FileWriter("target/network.diag"), scope).flush();
-
+            System.out.println("nwdiag is generating png ...");
             Runtime.getRuntime().exec("nwdiag -a --no-transparency target/network.diag").waitFor();
+            System.out.println("Opening file ...");
             Runtime.getRuntime().exec("open target/network.png").waitFor();
         } catch (Exception e) {
             throw new IllegalStateException("Could not write file", e);
@@ -103,9 +123,9 @@ public class CreateL3Diagram {
     private Map<String, List<THost>> createNetworks(IConfigDao aConfigDao) {
         Map<String, List<THost>> networks = new HashMap<>();
 
-        for (THost host : aConfigDao.listHosts()) {
+        for (THost host : aConfigDao.listHostsByFilter("internal", "ipmi")) {
             for (TInterface iface : host.interfaces) {
-                if (iface.ip != null) {
+                if (iface.ip != null && !"skip".equals(iface.ip)) {
                     String network = getNetwork(iface.ip);
                     addHostToNetwork(networks, network, host);
                 }

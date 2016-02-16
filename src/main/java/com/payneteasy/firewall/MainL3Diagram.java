@@ -16,9 +16,6 @@ public class MainL3Diagram {
 
         IConfigDao configDao = new ConfigDaoYaml(configDir);
 
-        for (THost host : configDao.listHosts()) {
-            System.out.println("isalive "+host.name);
-        }
         CreateL3Diagram creator = new CreateL3Diagram();
         creator.create(configDao);
 

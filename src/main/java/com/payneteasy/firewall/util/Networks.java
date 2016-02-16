@@ -37,4 +37,8 @@ public class Networks {
         int pos = aIp.lastIndexOf('.');
         return aIp.substring(pos+1);
     }
+
+    public static boolean isIpAddress(String aAddress) {
+        return Strings.hasText(aAddress) && !"skip".equals(aAddress);
+    }
 }

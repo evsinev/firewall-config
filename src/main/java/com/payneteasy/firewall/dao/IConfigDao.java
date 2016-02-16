@@ -27,6 +27,8 @@ public interface IConfigDao {
 
     List<THost> listHosts();
 
+    List<String> listGroups();
+
     Collection<? extends THost> findHostsByGroup(String aGroupName);
 
     TProtocols listProtocols();
@@ -38,4 +40,6 @@ public interface IConfigDao {
     HostInterface findLinkedInterface(THost aHost, TInterface anInterface);
 
     Collection<THost> getHostByPattern(String aPattern);
+
+    Collection<THost> listHostsByFilter(String ... aArguments);
 }

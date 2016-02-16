@@ -3,6 +3,7 @@ package com.payneteasy.firewall.service.model;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.TProtocol;
 import com.payneteasy.firewall.service.ConfigurationException;
+import com.payneteasy.firewall.util.Networks;
 
 import java.util.StringTokenizer;
 
@@ -61,7 +62,7 @@ public class UrlInfo {
             port = protocol.port;
         }
 
-        if(!"skip".equals(address) && !Character.isDigit(address.charAt(0))) {
+        if(Networks.isIpAddress(address) && !Character.isDigit(address.charAt(0))) {
             address = aConfigDao.resolveDns(address);
         }
         return new UrlInfo(name, port, address);
