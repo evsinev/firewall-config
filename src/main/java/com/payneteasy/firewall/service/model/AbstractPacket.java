@@ -12,6 +12,9 @@ public abstract class AbstractPacket {
     public String   source_service;
     public String   destination_service;
 
+    public String serviceDescription;
+    public String serviceJustification;
+
     public String getSource_service() {
         return source_service != null
                 ? source_service

@@ -44,4 +44,14 @@ public class Strings {
     public interface IGetText<T> {
         String getText(T aObj);
     }
+
+    public static String first(String ... args) {
+        if(args == null) return null;
+        for (String arg : args) {
+            if (hasText(arg)) {
+                return arg;
+            }
+        }
+        return null;
+    }
 }

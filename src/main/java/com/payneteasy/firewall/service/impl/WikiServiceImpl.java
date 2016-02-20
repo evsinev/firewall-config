@@ -10,6 +10,7 @@ import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
 import com.payneteasy.firewall.dao.model.TProtocol;
+import com.payneteasy.firewall.dao.model.TVirtualIpAddress;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.IWikiService;
@@ -23,12 +24,14 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import static com.google.common.base.Strings.nullToEmpty;
+
 public class WikiServiceImpl implements IWikiService {
 
     private static class InputPacketKey {
 
         static InputPacketKey fromInputPacket(InputPacket input) {
-            return new InputPacketKey(input.app_protocol, input.input_interface, input.destination_address, input.destination_port);
+            return new InputPacketKey(input.app_protocol, input.input_interface, input.destination_address, input.destination_port, input.serviceJustification, input.serviceDescription);
         }
 
         private final String appProtocol;
@@ -36,11 +39,19 @@ public class WikiServiceImpl implements IWikiService {
         private final String destinationAddress;
         private final int destinationPort;
 
-        private InputPacketKey(String appProtocol, String inputInterface, String destinationAddress, int destinationPort) {
+        public final String serviceJustification;
+        public final String serviceDescription;
+
+        private InputPacketKey(String appProtocol, String inputInterface, String destinationAddress, int destinationPort
+                               , String aServiceJustification
+                               , String aServiceDescription
+        ) {
             this.appProtocol = appProtocol;
             this.inputInterface = inputInterface;
             this.destinationAddress = destinationAddress;
             this.destinationPort = destinationPort;
+            serviceDescription = aServiceDescription;
+            serviceJustification = aServiceJustification;
         }
 
         @Override public int hashCode() {
@@ -75,7 +86,9 @@ public class WikiServiceImpl implements IWikiService {
     }
     
     private static String normalizeHostName(String host) {
-        return host.replaceAll("\\.", "_");
+        String name =  host.replaceAll("\\.", "_");
+        int pos = name.indexOf(":");
+        return pos > 0 ? name.substring(0, pos) : name;
     }
     
     private final IConfigDao configDao;    
@@ -155,24 +168,35 @@ public class WikiServiceImpl implements IWikiService {
             sb.append('|').append(packet.input_interface).append('/').append(packet.output_interface);
             sb.append('|').append(packet.app_protocol);
             sb.append('|').append(packet.protocol).append(':').append(packet.destination_port);
-            sb.append('|').append(Strings.nullToEmpty(packet.source_nat_address));
+            sb.append('|').append(nullToEmpty(packet.source_nat_address));
             sb.append('|').append(packet.destination_nat_address != null ? packet.destination_address + ":" + packet.destination_nat_port : "");
-            sb.append('|').append(protocol.description);
-            sb.append('|').append(protocol.justification).append("|\n");
+            sb.append('|').append(packet.serviceDescription != null ? packet.serviceDescription : protocol.description);
+            sb.append('|').append(packet.serviceJustification !=null ? packet.serviceJustification : protocol.justification).append("|\n");
         }        
     }
 
     private void appendInterfaces(StringBuilder sb, String hostName) {
         THost host = configDao.getHostByName(hostName);
         sb.append("\nh2. Interfaces\n\n");
-        sb.append("|_.Name|_.IP|_.DNS|\n");
+        sb.append("|_.Name|_.IP|_.Virtual IPs|_.DNS|\n");
         for (TInterface interfaze : host.interfaces) {
             sb.append('|').append(interfaze.name);
             sb.append('|').append(interfaze.ip);
-            sb.append('|').append(Strings.nullToEmpty(interfaze.dns)).append("|\n");
+            sb.append('|').append(nullToEmpty(interfaze.vip));
+            sb.append('|').append(nullToEmpty(interfaze.dns)).append("|\n");
+            for (TVirtualIpAddress vip : notNull(interfaze.vips)) {
+                sb.append('|').append(interfaze.name);
+                sb.append('|').append("");
+                sb.append('|').append(vip.ip);
+                sb.append('|').append(vip.names).append("|\n");
+            }
         }        
     }
-    
+
+    private List<TVirtualIpAddress> notNull(List<TVirtualIpAddress> aVips) {
+        return aVips != null ? aVips : Collections.EMPTY_LIST;
+    }
+
     private void appendInputTable(StringBuilder sb, String hostName) throws ConfigurationException {
         List<InputPacket> inputPackets = packetService.getInputPackets(hostName);
         if (inputPackets.size() == 0) {
@@ -194,8 +218,8 @@ public class WikiServiceImpl implements IWikiService {
             sb.append('|').append(collectionToString(inputs.get(key)));
 
             TProtocol protocol = configDao.findProtocol(clearProtocol(key.appProtocol));
-            sb.append('|').append(protocol.description);
-            sb.append('|').append(protocol.justification).append("|\n");
+            sb.append('|').append(key.serviceDescription != null ? key.serviceDescription : protocol.description);
+            sb.append('|').append(key.serviceJustification != null ? key.serviceJustification : protocol.justification).append("|\n");
         }        
     }
 
@@ -216,11 +240,11 @@ public class WikiServiceImpl implements IWikiService {
             TProtocol protocol = configDao.findProtocol(outputPacket.app_protocol);
             sb.append('|').append(createDetailsLink(outputPacket.destination_address_name));
             sb.append('|').append(outputPacket.destination_address);
-            sb.append('|').append(outputPacket.protocol);
+            sb.append('|').append(outputPacket.protocol).append(" ").append((outputPacket.serviceName != null ? outputPacket.serviceName : ""));
             sb.append('|').append(outputPacket.destination_port != -1 ? outputPacket.destination_port : "");
             sb.append('|').append(protocol.name);
-            sb.append('|').append(protocol.description);
-            sb.append('|').append(protocol.justification).append("|\n");
+            sb.append('|').append(outputPacket.serviceDescription != null ? outputPacket.serviceDescription : protocol.description);
+            sb.append('|').append(outputPacket.serviceJustification != null ? outputPacket.serviceJustification : protocol.justification).append("|\n");
         }        
     }
 

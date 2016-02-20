@@ -14,6 +14,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
+import static com.payneteasy.firewall.util.Strings.first;
 import static com.payneteasy.firewall.util.Strings.hasText;
 import static java.lang.String.format;
 
@@ -73,6 +74,8 @@ public class PacketServiceImpl implements IPacketService {
                     packet.destination_address_name = destinationHost.name;
                     packet.destination_port = service.port;
                     packet.output_interface = findInterface(middleHost, destinationHost);
+                    packet.serviceJustification = service.justification;
+                    packet.serviceDescription = service.description;
 
                     packet.protocol = service.protocol;
 
@@ -184,6 +187,8 @@ public class PacketServiceImpl implements IPacketService {
                 packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
                 packet.source_address = findAddress(packet.destination_address, sourceHost);
                 packet.source_address_name = hasText(access.serviceName) ? sourceHost.name + ":" + access.serviceName : sourceHost.name;
+                packet.serviceDescription = serviceConfig.description;
+                packet.serviceJustification = serviceConfig.justification;
 
                 ret.add(packet);
             }
@@ -416,6 +421,9 @@ public class PacketServiceImpl implements IPacketService {
                         packet.destination_address_name = destinationHost.name;
                         packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
                         packet.destination_port = serviceUrl.port;
+                        packet.serviceDescription = serviceConfig.description;
+                        packet.serviceJustification = serviceConfig.justification;
+                        packet.serviceName = serviceConfig.name;
 
                         packet.source_service = access.serviceName;
                         packet.destination_service = serviceConfig.name;
@@ -516,8 +524,8 @@ public class PacketServiceImpl implements IPacketService {
         info.port = url.port;
         info.address = url.address;
         info.program = protocol.program;
-        info.description = protocol.description;
-        info.justification = protocol.justification;
+        info.description = first(service.description, protocol.description);
+        info.justification = first(service.description, protocol.justification);
         info.access = createAccessList("service "+service.name, service.access);
         if(service.nat!=null) {
             info.nat = UrlInfo.parse(service.nat, url.address, theConfigDao);
