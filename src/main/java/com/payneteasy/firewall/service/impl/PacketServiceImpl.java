@@ -54,7 +54,14 @@ public class PacketServiceImpl implements IPacketService {
                     // skip access for the same host
                     if(middleHost.name.equals(sourceHost.name)) continue;
                     if(sourceHost.name.equals(destinationHost.name)) continue;
+
+                    // same vip address
                     if (hasSameVipAddress(sourceHost, middleHost, destinationHost.gw)) continue;
+
+                    // source and destination have addresses in the same network
+                    if ( Networks.isInSameNetwork(sourceHost, destinationHost)) {
+                        continue;
+                    }
 
                     Packet packet = new Packet();
                     packet.source_address = sourceHost.getDefaultIp();
@@ -220,10 +227,15 @@ public class PacketServiceImpl implements IPacketService {
         int max = -1 ;
         String maxAddress  = null;
         for (TInterface iface : interfaces) {
-            if(iface.skipIpAddress()) {
+            if(!Networks.isIpAddress(iface.ip)) {
                 continue;
             }
-            int left = parseAddress(iface.ip);
+            int left ;
+            try {
+                left= parseAddress(iface.ip);
+            } catch (Exception e) {
+                throw new IllegalStateException("Could not parse ip address "+iface.ip+ " for host "+aHost.name+" and interface "+iface.name);
+            }
             int count = calcEqualsBits(right, left);
 //            System.out.println(count+" " +Integer.toBinaryString(right) + " " + Integer.toBinaryString(left)+" "+left+" "+iface.ip);
             if(count>max) {

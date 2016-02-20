@@ -1,16 +1,25 @@
 package com.payneteasy.firewall.util;
 
+import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
 
+import java.util.List;
 import java.util.StringTokenizer;
 
 public class Networks {
 
     public static boolean isInNetwork(TInterface aLeftInterface, TInterface aRightInterface) {
-        String leftIp = aLeftInterface.ip;
-        String rightIp = aRightInterface.ip;
+        return isInNetwork(aLeftInterface.ip, aRightInterface.ip);
+    }
 
-        if(leftIp==null) return false;
+    public static boolean isInNetwork(String leftIp, String rightIp) {
+        if(!isIpAddress(leftIp)) {
+            return false;
+        }
+
+        if(!isIpAddress(rightIp)) {
+            return false;
+        }
 
         int left = leftIp.lastIndexOf('.');
         int right = rightIp.lastIndexOf('.');
@@ -40,5 +49,22 @@ public class Networks {
 
     public static boolean isIpAddress(String aAddress) {
         return Strings.hasText(aAddress) && !"skip".equals(aAddress);
+    }
+
+    public static boolean isInSameNetwork(THost aSourceHost, THost aDestinationHost) {
+        for (TInterface sourceInterface : aSourceHost.interfaces) {
+            List<String> sourceAddresses = sourceInterface.getAllIpAddresses();
+            for (TInterface destInterface : aDestinationHost.interfaces) {
+                List<String> destAddresses = destInterface.getAllIpAddresses();
+                for (String sourceAddress : sourceAddresses) {
+                    for (String destAddress : destAddresses) {
+                        if(isInNetwork(sourceAddress, destAddress)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
