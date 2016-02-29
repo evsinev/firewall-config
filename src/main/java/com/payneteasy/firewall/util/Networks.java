@@ -3,6 +3,7 @@ package com.payneteasy.firewall.util;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -63,6 +64,20 @@ public class Networks {
                         }
                     }
                 }
+            }
+        }
+        return false;
+    }
+
+    public static boolean hasCommonGateway(THost aLeft, THost aRight) {
+        return hasIpAddress(aLeft.gw, aRight.getAllIpAddresses())
+                || hasIpAddress(aRight.gw, aLeft.getAllIpAddresses());
+    }
+
+    private static boolean hasIpAddress(String aIp, List<String> aAddresses) {
+        for (String address : aAddresses) {
+            if(aIp.equals(address)) {
+                return true;
             }
         }
         return false;

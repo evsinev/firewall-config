@@ -40,7 +40,7 @@ public class PacketServiceImpl implements IPacketService {
 
                 ServiceInfo service;
                 try {
-                    service = getServiceInfo(serviceConfig, destinationHost.interfaces);
+                    service = getServiceInfo(serviceConfig, destinationHost.interfaces, destinationHost.getDefaultIp());
                 } catch (Exception e) {
                     throw new ConfigurationException("Error creating forward packets for host " + aHostname
                             +": could't create serviceConfig service for destination host '" + destinationHost.name
@@ -51,15 +51,7 @@ public class PacketServiceImpl implements IPacketService {
 
                     THost sourceHost = access.host;
 
-                    // skip access for the same host
-                    if(middleHost.name.equals(sourceHost.name)) continue;
-                    if(sourceHost.name.equals(destinationHost.name)) continue;
-
-                    // same vip address
-                    if (hasSameVipAddress(sourceHost, middleHost, destinationHost.gw)) continue;
-
-                    // source and destination have addresses in the same network
-                    if ( Networks.isInSameNetwork(sourceHost, destinationHost)) {
+                    if (filterHosts(sourceHost, middleHost, destinationHost)) {
                         continue;
                     }
 
@@ -136,6 +128,33 @@ public class PacketServiceImpl implements IPacketService {
             }
         });
         return ret;
+    }
+
+    private boolean filterHosts(THost sourceHost, THost middleHost, THost destinationHost) {
+        // skip access for the same host
+        if(middleHost.name.equals(sourceHost.name)) {
+            return true;
+        }
+
+        if(sourceHost.name.equals(destinationHost.name)) {
+            return true;
+        }
+
+        // same vip address
+        if (hasSameVipAddress(sourceHost, middleHost, destinationHost.gw)) {
+            return true;
+        }
+
+        // source and destination have addresses in the same network
+        if ( Networks.isInSameNetwork(sourceHost, destinationHost)) {
+            return true;
+        }
+
+        if(Networks.hasCommonGateway(sourceHost, destinationHost)) {
+            return true;
+        }
+
+        return false;
     }
 
     private boolean hasSameVipAddress(THost aLeft, THost aRight, String aGateway) {
@@ -523,9 +542,9 @@ public class PacketServiceImpl implements IPacketService {
         return null;
     }
 
-    private ServiceInfo getServiceInfo(TService service, List<TInterface> aInterfaces) throws ConfigurationException {
+    private ServiceInfo getServiceInfo(TService service, List<TInterface> aInterfaces, String aDefaultIpAddress) throws ConfigurationException {
 
-        UrlInfo url = UrlInfo.parse(service.url, aInterfaces.get(0).ip, theConfigDao);
+        UrlInfo url = UrlInfo.parse(service.url, aDefaultIpAddress, theConfigDao);
 
         TProtocol protocol = theConfigDao.findProtocol(url.protocol);
 

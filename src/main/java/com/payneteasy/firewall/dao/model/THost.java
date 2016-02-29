@@ -3,6 +3,7 @@ package com.payneteasy.firewall.dao.model;
 import com.google.common.collect.Lists;
 import com.payneteasy.firewall.util.Networks;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,6 +38,14 @@ public class THost {
             }
         }
         throw new IllegalStateException("There no default ip address for host "+name);
+    }
+
+    public List<String> getAllIpAddresses() {
+        List<String> ips = new ArrayList<>();
+        for (TInterface iface : interfaces) {
+            ips.addAll(iface.getAllIpAddresses());
+        }
+        return ips;
     }
 
     public String services_links;
