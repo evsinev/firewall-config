@@ -53,27 +53,6 @@
 
 #end
 
-#if ($vrrp-packets.size() > 0)
-#
-# VRRP
-#foreach( $p in $vrrp-packets )
-# $p.local_interface -> $p.remote_host.$p.remote_interface
--A INPUT  -p vrrp -i $p.local_interface -s $p.remote_address -d 224.0.0.0/8 -j ACCEPT
--A OUTPUT -p vrrp -o $p.local_interface -s $p.local_address  -d 224.0.0.0/8 -j ACCEPT
-
-#end
-#end
-
-#if ($linked-vrrp-packets.size() > 0)
-#
-# Linked VRRP
-#foreach( $p in $$linked-vrrp-packets )
-# $p.remote_host:$p.virtual_address -> broadcast
--A INPUT  -p vrrp -i $p.local_interface -s $p.remote_address -d 224.0.0.0/8 -j ACCEPT
-
-#end
-#end
-
 #
 # FORWARD packets 2
 #
