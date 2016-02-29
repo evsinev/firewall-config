@@ -187,6 +187,11 @@ public class PacketServiceImpl implements IPacketService {
         for (TService serviceConfig : targetHost.services) {
 
             UrlInfo serviceUrl = UrlInfo.parse(serviceConfig.url, targetHost.getDefaultIp(), theConfigDao);
+            String serviceInterface = findInterfaceByIp(serviceUrl.address, targetHost.interfaces, aHostname);
+
+            if(serviceInterface.equals("ipmi_nuc")) {
+                continue;
+            }
 
             List<Access> accessList;
             try {
@@ -207,8 +212,9 @@ public class PacketServiceImpl implements IPacketService {
                             + " or specify ip address for the service."
                     );
                 }
+
                 packet.destination_address = serviceUrl.address;
-                packet.input_interface  = findInterfaceByIp(serviceUrl.address, targetHost.interfaces, aHostname);
+                packet.input_interface  = serviceInterface;
                 packet.app_protocol = hasText(serviceConfig.name) ? serviceUrl.protocol + ":" + serviceConfig.name : serviceUrl.protocol;
                 packet.protocol = theConfigDao.findProtocol(serviceUrl.protocol).protocol;
                 packet.source_address = findAddress(packet.destination_address, sourceHost);

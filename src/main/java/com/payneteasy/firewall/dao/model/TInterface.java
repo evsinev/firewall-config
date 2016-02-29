@@ -21,9 +21,6 @@ public class TInterface {
     /** VRRP virtual IP address */
     public String vip;
 
-    /** On Intel NUC ipmi and primary ethernet are on the same physical interface */
-    public String ipmi_ip;
-
     /** VRRP priority, default is 100 */
     public String vrrpPriority;
 
@@ -78,7 +75,6 @@ public class TInterface {
                 ", link='" + link + '\'' +
                 ", port='" + port + '\'' +
                 ", vip='" + vip + '\'' +
-                ", ipmi_ip='" + ipmi_ip + '\'' +
                 ", vrrpPriority='" + vrrpPriority + '\'' +
                 ", vlan='" + vlan + '\'' +
                 ", vips=" + vips +
