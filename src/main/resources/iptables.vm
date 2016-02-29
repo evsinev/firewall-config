@@ -27,7 +27,6 @@
 #
 # INPUT packets
 #
--A INPUT -p icmp   -j ACCEPT
 #foreach( $p in $input-packets )
 # $p.source_address_name -> $p.app_protocol
 #if ($p.destination_port > 0 )
