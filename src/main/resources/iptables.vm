@@ -71,9 +71,12 @@
 -A INPUT -j LOG --log-prefix "Drop input packet:"
 -A FORWARD -j LOG --log-prefix "Drop forward packet:"
 
--A OUTPUT  -j REJECT
--A INPUT   -j REJECT
--A FORWARD -j REJECT
+# send tcp-reset for tcp connections
+-A OUTPUT   -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT    -p tcp -j REJECT --reject-with tcp-reset
+-A FORWARD  -p tcp -j REJECT --reject-with tcp-reset
+
+# drop packets by default for other protocols
 
 COMMIT
 
