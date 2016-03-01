@@ -67,8 +67,12 @@
 #end
 
 
--A OUTPUT -j LOG --log-prefix "Drop output packet:"
--A INPUT -j LOG --log-prefix "Drop input packet:"
+# for tcp --reject-with tcp-reset
+# for REJECT we send tcp packet with ACK and RST flags
+-A OUTPUT  -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j ACCEPT
+
+-A OUTPUT  -j LOG --log-prefix "Drop output packet:"
+-A INPUT   -j LOG --log-prefix "Drop input packet:"
 -A FORWARD -j LOG --log-prefix "Drop forward packet:"
 
 # send tcp-reset for tcp connections
