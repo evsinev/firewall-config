@@ -174,6 +174,20 @@ public class ConfigDaoYaml implements IConfigDao {
         return ret;
     }
 
+    @Override
+    public Collection<? extends THost> findHostsByGroups(String... aGroups) {
+        Set<String> groups = new HashSet<>();
+        groups.addAll(Arrays.asList(aGroups));
+
+        List<THost> ret = new ArrayList<THost>();
+        for (THost host : theHosts) {
+            if(groups.contains(host.group)) {
+                ret.add(host);
+            }
+        }
+        return ret;
+    }
+
     @Override public void persistPagesHistory() throws FileNotFoundException {
         File file = new File(theDir, "pages_history.yml");
         Writer writer = null; 

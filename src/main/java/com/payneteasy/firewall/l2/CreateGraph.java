@@ -51,13 +51,13 @@ public class CreateGraph {
         Map<String, Node> map = new HashMap<>();
 
         // servers and switches
-        aConfig.listHosts().stream().filter(this::isL2Host).forEach(host -> {
+        aConfig.listHostsByFilter("internal", "ipmi", "internet").stream().filter(this::isL2Host).forEach(host -> {
             String name = host.name;
             System.out.println(name);
             Node node = createGroup(aGraph, manager, name, host);
 
             for (TInterface iface : host.interfaces) {
-                if(iface.name.contains(".")) {
+                if(iface.name.contains(".") || iface.name.equals("ipmi_nuc") || iface.name.equals("tun0")) {
                     continue;
                 }
                 Node port = aGraph.createNode(nextHorizontal(host, iface), nextVertical(host, iface), getInterfacename(iface));
@@ -189,7 +189,11 @@ public class CreateGraph {
     }
 
     private boolean isL2Host(THost aHost) {
-        return true;
+        return     ! aHost.name.startsWith("ipmi-")
+                && ! aHost.name.startsWith("vpn-")
+                && ! aHost.name.equals("log-1")
+                && ! aHost.name.equals("internet-ipmi")
+                ;
     }
 
     private boolean isSwitch(THost aHost) {

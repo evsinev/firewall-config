@@ -31,6 +31,8 @@ public interface IConfigDao {
 
     Collection<? extends THost> findHostsByGroup(String aGroupName);
 
+    Collection<? extends THost> findHostsByGroups(String ... aGroups);
+
     TProtocols listProtocols();
 
     void persistPagesHistory() throws FileNotFoundException;
