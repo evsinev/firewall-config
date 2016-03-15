@@ -114,7 +114,7 @@ public class WikiServiceImpl implements IWikiService {
         sb.append("{{include(").append(normalizeHostName(hostName)).append("_packets)}}");
         sb.append('\n');
         
-        if ("internal".equals(host.group)) {
+        if ("internal".equals(host.group) || "ipmi".equals(host.group)) {
             sb.append("{{include(").append(normalizeHostName(hostName)).append("_run)}}");
         }        
         return sb.toString();
