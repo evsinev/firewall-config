@@ -35,6 +35,7 @@ public class CreateL3Diagram {
         names.put("10.2.23.0", "int-admin");
         names.put("10.2.24.0", "int-management");
         names.put("10.2.25.0", "int-cassandra");
+        names.put("10.2.26.0", "int-dao");
 
         names.put("10.6.0.0", "ipmi");
 
@@ -55,12 +56,17 @@ public class CreateL3Diagram {
         }
 
         Collections.sort(nets, (left, right) -> {
-            if(left.name.equals("internet")) {
+
+            if("internet".equals(left.name)) {
                 return -1;
             }
 
-            if(right.name.equals("internet")) {
+            if("internet".equals(right.name)) {
                 return 1;
+            }
+
+            if(left.name == null) {
+                throw new IllegalStateException("name is null for "+ left);
             }
 
             return left.name.compareTo(right.name);
@@ -154,10 +160,27 @@ public class CreateL3Diagram {
         String address;
         String name;
         List<Host> hosts;
+
+        @Override
+        public String toString() {
+            return "Network{" +
+                    "address='" + address + '\'' +
+                    ", name='" + name + '\'' +
+                    ", hosts=" + hosts +
+                    '}';
+        }
     }
 
     static class Host {
         String name;
         String ip;
+
+        @Override
+        public String toString() {
+            return "Host{" +
+                    "name='" + name + '\'' +
+                    ", ip='" + ip + '\'' +
+                    '}';
+        }
     }
 }
