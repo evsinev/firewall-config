@@ -18,6 +18,7 @@ import java.util.*;
 
 import com.payneteasy.firewall.util.Networks;
 import com.payneteasy.firewall.util.Strings;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import static java.lang.String.format;
@@ -28,7 +29,9 @@ import static java.lang.String.format;
 public class ConfigDaoYaml implements IConfigDao {
 
     public ConfigDaoYaml(File aDir) throws IOException {
-        theYaml = new Yaml();
+        final DumperOptions dumperOptions = new DumperOptions();
+        dumperOptions.setPrettyFlow(true);
+        theYaml = new Yaml(dumperOptions);
         theDir = aDir;
 
         theHosts = new ArrayList<THost>();
@@ -384,6 +387,22 @@ public class ConfigDaoYaml implements IConfigDao {
         }
 
         throw new IllegalStateException("There are more than one interface ("+ret+") connected to the "+linkByName + " or "+linkByPort);
+    }
+
+    @Override
+    public Map<String, String> listNetworksNames() {
+
+        final File file = new File(theDir, "networks.yml");
+        try {
+            TNetworks networks = theYaml.loadAs(new FileReader(file), TNetworks.class);
+            return networks.networks;
+        } catch (IOException e) {
+            TNetworks networks = new TNetworks();
+            networks.networks = new HashMap<>();
+            networks.networks.put("10.0.1.0", "Example network 1");
+            networks.networks.put("10.0.2.0", "Example network 2");
+            throw new IllegalStateException("Couldn't load "+file.getAbsolutePath()+" file\nExample content is: \n" + theYaml.dump(networks), e);
+        }
     }
 
     public final File theDir;

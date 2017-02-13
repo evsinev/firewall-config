@@ -7,6 +7,7 @@ import com.payneteasy.firewall.service.model.Access;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -44,4 +45,6 @@ public interface IConfigDao {
     Collection<THost> getHostByPattern(String aPattern);
 
     Collection<THost> listHostsByFilter(String ... aArguments);
+
+    Map<String, String> listNetworksNames();
 }

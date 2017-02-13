@@ -16,7 +16,7 @@ public class MainL3Diagram {
 
         IConfigDao configDao = new ConfigDaoYaml(configDir);
 
-        CreateL3Diagram creator = new CreateL3Diagram();
+        CreateL3Diagram creator = new CreateL3Diagram(configDir);
         creator.create(configDao);
 
     }

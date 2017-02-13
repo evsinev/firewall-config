@@ -6,45 +6,31 @@ import com.github.mustachejava.MustacheFactory;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
+import com.payneteasy.firewall.util.Files;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
 
 public class CreateL3Diagram {
 
+    private final File configDir;
+
+    public CreateL3Diagram(File configDir) {
+        this.configDir = configDir;
+    }
+
     public void create(IConfigDao aConfigDao) {
 
         Map<String, List<THost>> map = createNetworks(aConfigDao);
-        List<Network> nets = convertToNetWorks(map);
+        List<Network> nets = convertToNetWorks(map, aConfigDao);
         printNetwork(nets);
     }
 
-    private List<Network> convertToNetWorks(Map<String, List<THost>> map) {
+    private List<Network> convertToNetWorks(Map<String, List<THost>> map, IConfigDao aConfigDao) {
 
-        Map<String, String> names = new HashMap<>();
-        names.put("10.2.1.0", "dmz-public");
-        names.put("10.2.2.0", "dmz-out");
-        names.put("10.2.3.0", "dmz-ui");
-        names.put("10.2.4.0", "dmz-vpn");
-        names.put("10.2.5.0", "dmz-etc");
-
-        names.put("10.2.20.0", "int-proc");
-        names.put("10.2.21.0", "int-hsm");
-        names.put("10.2.22.0", "int-db");
-        names.put("10.2.23.0", "int-admin");
-        names.put("10.2.24.0", "int-management");
-        names.put("10.2.25.0", "int-cassandra");
-        names.put("10.2.26.0", "int-dao");
-
-        names.put("10.6.0.0", "ipmi");
-
-        names.put("10.8.0.0", "vpn-network");
-        names.put("10.7.0.0", "vpn-ipmi");
-
-        names.put("0.0.0.0", "internet");
-        names.put("185.15.175.0", "internet");
-
+        Map<String, String> names = aConfigDao.listNetworksNames();
 
         List<Network> nets = new ArrayList<>();
         for (Map.Entry<String, List<THost>> entry : map.entrySet()) {
@@ -52,6 +38,13 @@ public class CreateL3Diagram {
             net.address = entry.getKey();
             net.name = names.get(entry.getKey());
             net.hosts = convertToHosts(net.address, entry.getValue());
+            if(net.name == null) {
+                throw new IllegalStateException("Network  "+entry.getKey()+" has no name, please add it to networks.yml file");
+            }
+
+            if(net.name.startsWith("skip")) {
+                continue;
+            }
             nets.add(net);
         }
 
@@ -66,7 +59,11 @@ public class CreateL3Diagram {
             }
 
             if(left.name == null) {
-                throw new IllegalStateException("name is null for "+ left);
+                throw new IllegalStateException("Left name is null for "+ left);
+            }
+
+            if(right.name == null) {
+                throw new IllegalStateException("Right name is null for " + right);
             }
 
             return left.name.compareTo(right.name);
@@ -76,8 +73,8 @@ public class CreateL3Diagram {
         return nets;
     }
 
-    private List<Host> convertToHosts(String aNetworkAddress, List<THost> aValue) {
-        List<Host> ret = new ArrayList<>();
+    private Set<Host> convertToHosts(String aNetworkAddress, List<THost> aValue) {
+        Set<Host> ret = new HashSet<>();
         for (THost host : aValue) {
             Host h = new Host();
             h.name = host.name;
@@ -103,7 +100,7 @@ public class CreateL3Diagram {
 
             if(ip.substring(0, left).equals(aNetworkAddress.substring(0, right))) {
                 return true;
-            };
+            }
         }
         return false;
     }
@@ -111,16 +108,19 @@ public class CreateL3Diagram {
     private void printNetwork(List<Network> aNets) {
         MustacheFactory mf = new DefaultMustacheFactory();
         Mustache mustache = mf.compile("nwdiag.mustache");
+
         try {
-            Map<String, List<Network>> scope = new HashMap<>();
+            Map<String, Object> scope = new HashMap<>();
             scope.put("networks", aNets);
+            scope.put("custom", Files.readFile(new File(configDir, "nwdiag-custom.diag")));
 
             mustache.execute(new PrintWriter(System.out), scope).flush();
             mustache.execute(new FileWriter("target/network.diag"), scope).flush();
+
             System.out.println("nwdiag is generating png ...");
-            Runtime.getRuntime().exec("nwdiag -a --no-transparency target/network.diag").waitFor();
+            System.out.println(Runtime.getRuntime().exec("nwdiag -a --no-transparency target/network.diag").waitFor());
             System.out.println("Opening file ...");
-            Runtime.getRuntime().exec("open target/network.png").waitFor();
+            System.out.println(Runtime.getRuntime().exec("open target/network.png").waitFor());
         } catch (Exception e) {
             throw new IllegalStateException("Could not write file", e);
         }
@@ -159,7 +159,7 @@ public class CreateL3Diagram {
     static class Network {
         String address;
         String name;
-        List<Host> hosts;
+        Set<Host> hosts;
 
         @Override
         public String toString() {
@@ -181,6 +181,25 @@ public class CreateL3Diagram {
                     "name='" + name + '\'' +
                     ", ip='" + ip + '\'' +
                     '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Host host = (Host) o;
+
+            if (name != null ? !name.equals(host.name) : host.name != null) return false;
+            return !(ip != null ? !ip.equals(host.ip) : host.ip != null);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = name != null ? name.hashCode() : 0;
+            result = 31 * result + (ip != null ? ip.hashCode() : 0);
+            return result;
         }
     }
 }
