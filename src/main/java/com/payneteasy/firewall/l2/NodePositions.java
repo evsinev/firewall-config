@@ -44,6 +44,10 @@ public class NodePositions {
         return map.get(key);
     }
 
+    public TreeMap<String, Point> getMap() {
+        return map;
+    }
+
     public void clear() {
         map.clear();
     }
