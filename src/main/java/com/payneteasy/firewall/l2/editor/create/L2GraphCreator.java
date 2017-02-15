@@ -35,9 +35,9 @@ public class L2GraphCreator {
                 if(hasText(iface.name)) {
                     builder.addPort(host.name, iface.name);
                 }
-                if(hasText(iface.port)) {
-                    builder.addPort(host.name, iface.port);
-                }
+//                if(hasText(iface.port)) {
+//                    builder.addPort(host.name, iface.port);
+//                }
             }
         }
 

@@ -8,7 +8,7 @@ import java.util.List;
 
 public class HostAndLinkBuilder {
 
-    Map<String, HostHolder> hostsMap = new TreeMap<>();
+    Map<String, HostHolder> pengindHostMap = new TreeMap<>();
     Set<LinkHolder> linksSet = new TreeSet<>();
     Hosts hosts;
 
@@ -19,15 +19,15 @@ public class HostAndLinkBuilder {
     }
 
     public void addHost(String aHostname) {
-        if(hostsMap.containsKey(aHostname)) {
+        if(pengindHostMap.containsKey(aHostname)) {
 
             //throw new IllegalStateException("Host " + aHostname + " already added");
         }
-        hostsMap.put(aHostname, new HostHolder());
+        pengindHostMap.put(aHostname, new HostHolder());
     }
 
     public void addPort(String aHostname, String aInterfaceName) {
-        HostHolder hostHolder = hostsMap.get(aHostname);
+        HostHolder hostHolder = pengindHostMap.get(aHostname);
         if(hostHolder == null) {
             throw new IllegalStateException("Host " + aHostname + " not found");
         }
@@ -51,7 +51,7 @@ public class HostAndLinkBuilder {
     }
 
     private void checkHostAndPort(String aLeftHostname, String aLeftInterface) {
-        HostHolder hostHolder = hostsMap.get(aLeftHostname);
+        HostHolder hostHolder = pengindHostMap.get(aLeftHostname);
         if(hostHolder == null) {
             throw new IllegalStateException("Host " + aLeftHostname + " not found");
         }
@@ -62,7 +62,7 @@ public class HostAndLinkBuilder {
     }
 
     public Hosts createHosts() {
-        hostsMap = null;
+        // add all hosts from links
         Map<String, HostHolder> map = new HashMap<>();
         for (LinkHolder linkHolder : linksSet) {
             System.out.println("linkHolder = " + linkHolder);
@@ -70,6 +70,19 @@ public class HostAndLinkBuilder {
             addHostAndPort(map, linkHolder.rightHost, linkHolder.rightPort);
         }
 
+        // find all host and add all its ports
+        for (Map.Entry<String, HostHolder> entry : map.entrySet()) {
+            HostHolder pendingHolder = pengindHostMap.get(entry.getKey());
+            for (String pendingPort : pendingHolder.interfacesMap) {
+
+                if(isVirtualPort(pendingPort)) { // skip virtual port
+                    continue;
+                }
+                entry.getValue().interfacesMap.add(pendingPort);
+            }
+        }
+
+        // create hosts
         List<Host> hosts = new ArrayList<>();
         for (Map.Entry<String, HostHolder> entry : map.entrySet()) {
             List<Port> ports = new ArrayList<>();
@@ -85,6 +98,11 @@ public class HostAndLinkBuilder {
         }
         this.hosts = new Hosts(hosts);
         return this.hosts;
+    }
+
+    private boolean isVirtualPort(String aPortName) {
+        return aPortName.contains(":")
+                || aPortName.startsWith("tun");
     }
 
     private static void addHostAndPort(Map<String, HostHolder> map, String leftHost, String port) {
