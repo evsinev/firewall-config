@@ -12,15 +12,14 @@ public class PropertiesPositionManager implements IPositionManager {
     final Properties properties;
     final IPositionManager missManager;
 
-    public PropertiesPositionManager(File aDirectory, IPositionManager aMissManager) {
+    public PropertiesPositionManager(File aConfigFile, IPositionManager aMissManager) {
         properties = new Properties();
         missManager = aMissManager;
         try {
-            final File file = new File(aDirectory, "positions.properties");
-            if(file.exists()) {
-                properties.load(new FileReader(file));
+            if(aConfigFile.exists()) {
+                properties.load(new FileReader(aConfigFile));
             } else {
-                System.out.println("Properties file " + file.getAbsolutePath() + " does not exit");
+                System.out.println("Properties file " + aConfigFile.getAbsolutePath() + " does not exit");
             }
         } catch (IOException e) {
             throw new IllegalStateException("Couldn't load property file", e);

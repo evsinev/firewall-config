@@ -8,6 +8,6 @@ import java.io.IOException;
 public class MainL2DiagramEditor {
 
     public static void main(String[] args) throws IOException {
-        new L2Editor().show(new File(args[0]));
+        new L2Editor().show(new File(args[0]), args[1]);
     }
 }

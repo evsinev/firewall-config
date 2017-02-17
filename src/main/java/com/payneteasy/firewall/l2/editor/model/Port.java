@@ -16,7 +16,10 @@ public class Port implements INode {
     private int textWidth  = 0;
     private int textHeight = 0;
 
-    public Port(String aName, int aX, int aY) {
+    private final Color backgroundColor;
+
+    public Port(String aName, int aX, int aY, Color aBackgroundColor) {
+        backgroundColor = aBackgroundColor;
         name = aName;
         x = aX;
         y = aY;
@@ -29,7 +32,7 @@ public class Port implements INode {
             textHeight = aCanvas.getTextHeight(displayName);
         }
 
-        aCanvas.fillRect(Color.WHITE, x, y, calculateWidth(), calculateHeight());
+        aCanvas.fillRect(backgroundColor, x, y, calculateWidth(), calculateHeight());
         aCanvas.drawRect(Color.RED , x, y, calculateWidth(), calculateHeight());
 
         aCanvas.drawText(Color.BLACK, x + 5, y + calculateHeight() - 5, displayName);

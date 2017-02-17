@@ -24,21 +24,22 @@ public class L2Editor implements KeyListener {
     MouseMovementListener mouseListener;
     double scale = 1;
     File configDir;
+    String prefix;
 
     public L2Editor() {
         frame = new JFrame("L2");
-        frame.setSize(400, 500);
+        frame.setSize(1916, 1057);
         frame.addKeyListener(this);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
     }
 
-    public void show(File aConfigDir) throws IOException {
-
+    public void show(File aConfigDir, String aPrefix) throws IOException {
+        prefix = aPrefix;
         configDir = aConfigDir;
 
         IConfigDao configDao = new ConfigDaoYaml(aConfigDir);
-        L2GraphCreator creator = new L2GraphCreator(configDao, aConfigDir);
+        L2GraphCreator creator = new L2GraphCreator(configDao, aConfigDir, aPrefix);
         creator.create();
 
         final Hosts hosts = creator.getHosts();
@@ -62,6 +63,7 @@ public class L2Editor implements KeyListener {
         System.out.println("e = " + e);
         switch (e.getKeyCode()){
             case KeyEvent.VK_Q:
+                System.out.println(frame.getBounds());
                 System.exit(0);
                 return;
 
@@ -82,7 +84,7 @@ public class L2Editor implements KeyListener {
                     component.removeMouseListener(mouseListener);
                     component.removeMouseMotionListener(mouseListener);
                     frame.removeAll();
-                    show(configDir);
+                    show(configDir, prefix);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -102,7 +104,9 @@ public class L2Editor implements KeyListener {
             Properties props = new Properties();
             IPointSaver saver = new PointSaverProperties(props);
             component.save(saver);
-            props.store(new FileWriter(new File(configDir, "positions.properties")), "");
+            final File file = new File(configDir, prefix + "-l2-positions.properties");
+            props.store(new FileWriter(file), "");
+            System.out.println("Saved to " + file);
         } catch (Exception e) {
             throw new IllegalStateException("Couldn't store points", e);
         }

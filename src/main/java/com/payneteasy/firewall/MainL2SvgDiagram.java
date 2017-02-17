@@ -15,9 +15,10 @@ public class MainL2SvgDiagram {
 
     public static void main(String[] args) throws IOException {
         File dir = new File(args[0]);
+        String prefix = args[1];
 
         IConfigDao configDao = new ConfigDaoYaml(dir);
-        L2GraphCreator creator = new L2GraphCreator(configDao, dir);
+        L2GraphCreator creator = new L2GraphCreator(configDao, dir, prefix);
         creator.create();
 
 
@@ -28,7 +29,7 @@ public class MainL2SvgDiagram {
         Dimension size = component.getPreferredSize();
         graphics = new SVGGraphics2D(size.width, size.height);
         component.paintComponent(graphics);
-        FileWriter out = new FileWriter(new File("output.svg"));
+        FileWriter out = new FileWriter(new File(prefix+ "-l2.svg"));
         out.write(graphics.getSVGDocument());
         out.close();
 

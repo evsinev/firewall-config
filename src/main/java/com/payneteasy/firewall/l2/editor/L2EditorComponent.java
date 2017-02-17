@@ -8,6 +8,7 @@ import com.payneteasy.firewall.l2.editor.model.Links;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Date;
 
 public class L2EditorComponent extends JComponent {
 
@@ -28,6 +29,8 @@ public class L2EditorComponent extends JComponent {
     @Override
     public void paintComponent(Graphics g){
         final Graphics2D g2 = (Graphics2D) g;
+
+        g2.drawString("Generated at " + new Date(), 10, 20);
 
         if(scale != 1.0) {
             g2.scale(scale, scale);

@@ -6,6 +6,7 @@ import com.payneteasy.firewall.dao.model.TInterface;
 import com.payneteasy.firewall.l2.editor.create.HostAndLinkBuilder;
 import com.payneteasy.firewall.l2.editor.model.Hosts;
 import com.payneteasy.firewall.l2.editor.model.Links;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.util.Collection;
@@ -18,11 +19,10 @@ public class L2GraphCreator {
     HostAndLinkBuilder builder;
 
 
-    public L2GraphCreator(IConfigDao configDao, File aConfigDir) {
+    public L2GraphCreator(IConfigDao configDao, File aConfigDir, String aPrefix) {
         this.configDao = configDao;
-//                positionManager//new PlainPositions(new File(aConfigDir, "l2positions.properties"))
-        PropertiesPositionManager positionManager = new PropertiesPositionManager(aConfigDir, new EmptyPositionManager());
-        builder = new HostAndLinkBuilder( positionManager);
+        PropertiesPositionManager positionManager = new PropertiesPositionManager(new File(aConfigDir, aPrefix  + "-l2-positions.properties"), new EmptyPositionManager());
+        builder = new HostAndLinkBuilder( positionManager, L2CustomParameters.load(new File(aConfigDir, aPrefix + "-l2-additions.yml")));
     }
 
     public void create() {
@@ -33,7 +33,7 @@ public class L2GraphCreator {
             builder.addHost(host.name);
             for (TInterface iface : host.interfaces) {
                 if(hasText(iface.name)) {
-                    builder.addPort(host.name, iface.name);
+                    builder.addPort(host.name, iface.name, iface.vlan);
                 }
 //                if(hasText(iface.port)) {
 //                    builder.addPort(host.name, iface.port);
