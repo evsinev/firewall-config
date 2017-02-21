@@ -23,7 +23,7 @@ public class Port implements INode {
         name = aName;
         x = aX;
         y = aY;
-        displayName = name.replace("ether", "");
+        displayName = name.replace("ether", "").replace("bridge", "br");
     }
 
     public void draw(ICanvas aCanvas) {

@@ -27,7 +27,7 @@ public class L2Editor implements KeyListener {
     String prefix;
 
     public L2Editor() {
-        frame = new JFrame("L2");
+        frame = new JFrame("L2" );
         frame.setSize(1916, 1057);
         frame.addKeyListener(this);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -50,6 +50,7 @@ public class L2Editor implements KeyListener {
         component.addMouseMotionListener(mouseListener);
 
         frame.add(new JScrollPane(component));
+        frame.setTitle(prefix + " L2");
         frame.setVisible(true);
     }
 

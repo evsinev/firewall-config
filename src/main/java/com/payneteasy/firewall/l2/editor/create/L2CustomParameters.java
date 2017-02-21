@@ -12,9 +12,9 @@ import java.util.List;
 
 public class L2CustomParameters {
 
-    public Map<String, String> vlanColors;
-    public List<String>        addedLinks;
-    public List<String>        removedLinks;
+    public Map<String, String> vlanColors = new HashMap<>();
+    public List<String>        addedLinks = new ArrayList<>();
+    public List<String>        removedLinks = new ArrayList<>();
 
     public static void main(String[] args) {
         L2CustomParameters params = new L2CustomParameters();
