@@ -14,13 +14,15 @@ public class HostAndLinkBuilder {
     Hosts                   hosts;
     final Map<String, Color>      vlanColors;
     List<LinkHolder>        removedLinks;
+    final L2CustomParameters customParameters;
 
     final IPositionManager positions;
 
     public HostAndLinkBuilder(IPositionManager positions, L2CustomParameters aCustomParameters) {
         this.positions = positions;
+        customParameters = aCustomParameters;
         vlanColors = aCustomParameters.getVlanColors();
-        pengindHostMap = aCustomParameters.getPendingHostMap();
+        pengindHostMap = new HashMap<>();
         linksSet       = aCustomParameters.getLinks();
         removedLinks   = aCustomParameters.getRemovedLinks();
 //        vlanColors.put("vlan_inside", new Color(0xF78181));
@@ -76,8 +78,12 @@ public class HostAndLinkBuilder {
     public Hosts createHosts() {
         // remove links
         for (LinkHolder link : removedLinks) {
-            linksSet.remove(link);
+            if(!linksSet.remove(link)) {
+                throw new IllegalStateException("Couldn't find " + link + " to delete");
+            }
         }
+
+        customParameters.getPendingHostMap(pengindHostMap);
 
         // add all hosts from links
         Map<String, HostHolder> map = new HashMap<>();
@@ -113,7 +119,7 @@ public class HostAndLinkBuilder {
                     , hostPoint.y
                     , new Ports(ports)));
         }
-        this.hosts = new Hosts(hosts);
+        this.hosts = new Hosts(hosts, vlanColors);
         return this.hosts;
     }
 

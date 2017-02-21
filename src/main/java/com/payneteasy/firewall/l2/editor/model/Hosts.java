@@ -6,6 +6,7 @@ import com.payneteasy.firewall.l2.editor.graphics.ICanvas;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Hosts {
 
@@ -13,14 +14,24 @@ public class Hosts {
 
     private INode pickedNode;
     private Point offsetPoint;
+    private Map<String, Color> vlanColors;
 
-    public Hosts(List<Host> aHosts) {
+    public Hosts(List<Host> aHosts, Map<String, Color> aVlanColors) {
         hosts = aHosts;
+        vlanColors = aVlanColors;
     }
 
     public void draw(ICanvas aCanvas) {
         for (Host host : hosts) {
             host.draw(aCanvas);
+        }
+
+        int y = 40;
+        for (Map.Entry<String, Color> entry : vlanColors.entrySet()) {
+            aCanvas.fillRect(entry.getValue(), 10, y, 10, 10);
+            aCanvas.drawRect(Color.RED, 10, y, 10, 10);
+            aCanvas.drawText(Color.BLACK, 30, y + 10, entry.getKey());
+            y+= 30;
         }
     }
 

@@ -48,8 +48,7 @@ public class L2CustomParameters {
         return map;
     }
 
-    public Map<String, HostAndLinkBuilder.HostHolder> getPendingHostMap() {
-        Map<String, HostAndLinkBuilder.HostHolder> hosts = new HashMap<>();
+    public Map<String, HostAndLinkBuilder.HostHolder> getPendingHostMap(Map<String, HostAndLinkBuilder.HostHolder> hosts) {
         if(addedLinks == null) {
             addedLinks = new ArrayList<>();
         }
