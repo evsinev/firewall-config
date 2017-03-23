@@ -21,7 +21,12 @@ public class L2GraphCreator {
 
     public L2GraphCreator(IConfigDao configDao, File aConfigDir, String aPrefix) {
         this.configDao = configDao;
-        PropertiesPositionManager positionManager = new PropertiesPositionManager(new File(aConfigDir, aPrefix  + "-l2-positions.properties"), new EmptyPositionManager());
+        final File oldPositionsFile = new File(aConfigDir, "l2positions.properties");
+
+        PropertiesPositionManager positionManager = new PropertiesPositionManager(
+                new File(aConfigDir, aPrefix  + "-l2-positions.properties")
+                , oldPositionsFile.exists() ? new PlainPositions(oldPositionsFile) : new EmptyPositionManager()
+        );
         builder = new HostAndLinkBuilder( positionManager, L2CustomParameters.load(new File(aConfigDir, aPrefix + "-l2-additions.yml")));
     }
 

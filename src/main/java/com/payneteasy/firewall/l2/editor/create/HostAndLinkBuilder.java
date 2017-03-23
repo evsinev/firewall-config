@@ -111,6 +111,9 @@ public class HostAndLinkBuilder {
             List<Port> ports = new ArrayList<>();
             for (PortHolder port : entry.getValue().getPorts()) {
                 Point portPoint = positions.getPortPosition(entry.getKey(), port.name);
+                if(canSkiPort(port.name))  {
+                    continue;
+                }
                 ports.add(new Port(port.name, portPoint.x, portPoint.y, findVlanColor(port.vlan)));
             }
             Point hostPoint = positions.getHostPosition(entry.getKey());
@@ -121,6 +124,12 @@ public class HostAndLinkBuilder {
         }
         this.hosts = new Hosts(hosts, vlanColors);
         return this.hosts;
+    }
+
+    private boolean canSkiPort(String aName) {
+        return     aName.startsWith("eth0.")
+                || aName.startsWith("eth1.")
+                || "ipmi_nuc".equals(aName);
     }
 
     private Color findVlanColor(String aVlan) {
