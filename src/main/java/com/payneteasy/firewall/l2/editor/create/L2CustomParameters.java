@@ -1,5 +1,6 @@
 package com.payneteasy.firewall.l2.editor.create;
 
+import com.payneteasy.firewall.l2.editor.model.LinkType;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -131,7 +132,7 @@ public class L2CustomParameters {
         }
 
         public LinkHolder getLinkHolder() {
-            return new LinkHolder(leftHost, leftPort, rightHost, rightPort);
+            return new LinkHolder(leftHost, leftPort, rightHost, rightPort, LinkType.CUSTOM_ADDED);
         }
     }
 }

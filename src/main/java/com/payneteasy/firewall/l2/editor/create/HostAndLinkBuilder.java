@@ -61,7 +61,7 @@ public class HostAndLinkBuilder {
         String rightHostname  = st.nextToken();
         String rightPort      = st.nextToken();
         checkHostAndPort(rightHostname, rightPort);
-        linksSet.add(new LinkHolder(aLeftHostname, aLeftInterface, rightHostname, rightPort));
+        linksSet.add(new LinkHolder(aLeftHostname, aLeftInterface, rightHostname, rightPort, LinkType.COMMON));
     }
 
     private void checkHostAndPort(String aLeftHostname, String aLeftInterface) {
@@ -168,7 +168,7 @@ public class HostAndLinkBuilder {
     public Links createLinks() {
         List<Link> links = new ArrayList<>();
         for (LinkHolder holder : linksSet) {
-            links.add(hosts.createLink(holder.leftHost, holder.leftPort, holder.rightHost, holder.rightPort));
+            links.add(hosts.createLink(holder.leftHost, holder.leftPort, holder.rightHost, holder.rightPort, holder.linkType));
         }
         return new Links(links);
     }

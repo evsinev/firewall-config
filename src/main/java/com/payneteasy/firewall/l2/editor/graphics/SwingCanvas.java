@@ -23,9 +23,11 @@ public class SwingCanvas implements ICanvas {
     }
 
     @Override
-    public void drawLine(Color aColor, int aX, int aY, int aWidth, int aHeight) {
+    public void drawLine(Color aColor, float width, int aX, int aY, int aWidth, int aHeight) {
         graphics.setColor(aColor);
+        graphics.setStroke(new BasicStroke(width));
         graphics.drawLine(aX, aY, aWidth, aHeight);
+        graphics.setStroke(new BasicStroke(1));
     }
 
     @Override

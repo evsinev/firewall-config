@@ -76,7 +76,7 @@ public class Hosts {
         pickedNode.moveTo(aX + offsetPoint.x, aY + offsetPoint.y);
     }
 
-    public Link createLink(String aLeftHost, String aLeftPort, String aRightHost, String aRightPort) {
+    public Link createLink(String aLeftHost, String aLeftPort, String aRightHost, String aRightPort, LinkType aType) {
         Host leftHost = findHost(aLeftHost);
         Host rightHost = findHost(aRightHost);
         return new Link(
@@ -84,6 +84,7 @@ public class Hosts {
                 , leftHost.findPort(aLeftPort)
                 , rightHost
                 , rightHost.findPort(aRightPort)
+                , aType
         );
     }
 

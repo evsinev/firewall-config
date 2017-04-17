@@ -8,7 +8,7 @@ public interface ICanvas {
 
     void fillRect(Color aColor, int aX, int aY, int aWidth, int aHeight);
     void drawRect(Color aColor, int aX, int aY, int aWidth, int aHeight);
-    void drawLine(Color aColor, int aX, int aY, int aWidth, int aHeight);
+    void drawLine(Color aColor, float width, int aX, int aY, int aWidth, int aHeight);
 
     ICanvas createChild(int aOffsetX, int aOffsetY);
 

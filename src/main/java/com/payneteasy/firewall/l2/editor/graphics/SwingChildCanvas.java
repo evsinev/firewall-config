@@ -36,8 +36,8 @@ public class SwingChildCanvas implements ICanvas {
     }
 
     @Override
-    public void drawLine(Color aColor, int aX, int aY, int aWidth, int aHeight) {
-        parent.drawLine(aColor, xoffset + aX, yoffset + aY, aWidth, aHeight);
+    public void drawLine(Color aColor, float width, int aX, int aY, int aWidth, int aHeight) {
+        parent.drawLine(aColor, width, xoffset + aX, yoffset + aY, aWidth, aHeight);
     }
 
     @Override

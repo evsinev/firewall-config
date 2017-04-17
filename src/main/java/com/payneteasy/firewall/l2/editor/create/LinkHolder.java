@@ -1,16 +1,20 @@
 package com.payneteasy.firewall.l2.editor.create;
 
+import com.payneteasy.firewall.l2.editor.model.LinkType;
+
 public class LinkHolder implements Comparable {
     public final String leftHost;
     public final String leftPort;
     public final String rightHost;
     public final String rightPort;
+    public final LinkType linkType;
 
-    public LinkHolder(String leftHost, String leftPort, String rightHost, String rightPort) {
+    public LinkHolder(String leftHost, String leftPort, String rightHost, String rightPort, LinkType aLinkType) {
         this.leftHost = leftHost;
         this.leftPort = leftPort;
         this.rightHost = rightHost;
         this.rightPort = rightPort;
+        linkType = aLinkType;
     }
 
     @Override
