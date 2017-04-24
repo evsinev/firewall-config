@@ -6,6 +6,7 @@ import com.github.mustachejava.MustacheFactory;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
+import com.payneteasy.firewall.util.CommandProcess;
 import com.payneteasy.firewall.util.Files;
 
 import java.io.File;
@@ -118,9 +119,11 @@ public class CreateL3Diagram {
             mustache.execute(new FileWriter("target/network.diag"), scope).flush();
 
             System.out.println("nwdiag is generating png ...");
-            System.out.println(Runtime.getRuntime().exec("nwdiag -a --no-transparency target/network.diag").waitFor());
+            new CommandProcess("nwdiag", "nwdiag -a --no-transparency target/network.diag").waitSuccess();
+
             System.out.println("Opening file ...");
-            System.out.println(Runtime.getRuntime().exec("open target/network.png").waitFor());
+            new CommandProcess("open", "open target/network.png").waitSuccess();
+
         } catch (Exception e) {
             throw new IllegalStateException("Could not write file", e);
         }
