@@ -256,12 +256,13 @@ public class WikiServiceImpl implements IWikiService {
         });
         StringBuilder sb = new StringBuilder();
         sb.append("h2. ").append(group).append(" group\n\n");
-        sb.append("|_.Host|_.IP address|_.Description|\n");
+        sb.append("|_.Host|_.IP address|_.Description|_.Justification|\n");
         while (externalHosts.hasNext()) {
             THost host = externalHosts.next();
             sb.append("|").append(createDetailsLink(host.name));
             sb.append("|").append(host.getDefaultIp());
-            sb.append("|").append(host.description).append("|\n");
+            sb.append("|").append(host.description);
+            sb.append("|").append(host.justification).append("|\n");
         }
         return sb.toString();
     }
