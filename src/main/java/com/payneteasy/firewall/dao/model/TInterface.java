@@ -26,6 +26,12 @@ public class TInterface {
 
     public String vlan;
 
+    /**
+     * TCP MSS Parameter
+     * INPUT -s $ADDRESS -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss 1300
+     */
+    public Integer mss;
+
     public List<TVirtualIpAddress> vips;
 
     public String getLongNetmask() {

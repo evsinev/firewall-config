@@ -184,6 +184,36 @@ public class PacketServiceImpl implements IPacketService {
     }
 
     @Override
+    public Set<InputMssPacket> getInputMssPackets(String aHostname) throws ConfigurationException {
+        Set<InputMssPacket> ret = new HashSet<>();
+
+        // 1. find all host where aHostname in in the access list
+        // 2. interface all interfaces
+        for (THost sourceHost : theConfigDao.listHosts()) {
+            for (TService sourceServices : sourceHost.services) {
+                for (TInterface sourceInterface : sourceHost.interfaces) {
+                    if(sourceInterface.mss != null) {
+                        for (String destinationHost : sourceServices.access) {
+                            if(destinationHost.equals(aHostname)) {
+                                if(destinationHost.equals(aHostname)) {
+                                    ret.add(new InputMssPacket(
+                                            sourceInterface.ip
+                                            , sourceInterface.mss
+                                            , sourceHost.name
+                                            , sourceServices.url
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    @Override
     public List<InputPacket> getInputPackets(String aHostname) throws ConfigurationException {
         List<InputPacket> ret = new ArrayList<InputPacket>();
 

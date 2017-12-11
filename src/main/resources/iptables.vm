@@ -38,6 +38,15 @@
 #end
 
 #end
+#if ( $input-mss.size() > 0 )
+#
+# MSS
+#
+#foreach( $p in $input-mss )
+# -> $p.source_address_name [$p.destination_service]
+-A INPUT -s $p.source_address -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss $p.mss
+#end
+#end
 
 #
 # OUTPUT packets

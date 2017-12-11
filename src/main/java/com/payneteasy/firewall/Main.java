@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public class Main {
 
@@ -48,6 +49,7 @@ public class Main {
     private static void createFirewallConfig(String host, String aDir, IPacketService packetService) throws ConfigurationException, IOException {
         List<Packet> forwards = packetService.getForwardPackets(host);
         List<InputPacket> inputs = packetService.getInputPackets(host);
+        Set<InputMssPacket> mssInputs = packetService.getInputMssPackets(host);
         List<OutputPacket> outputs = packetService.getOutputPackets(host);
         List<VrrpPacket> vrrpPackets = packetService.getVrrpPackets(host);
         List<LinkedVrrpPacket> linkedVrrpPackets = packetService.getLinkedVrrpPackets(host);
@@ -57,6 +59,7 @@ public class Main {
         velocity.add("generated-user", System.getenv("USER"));
         velocity.add("forward-packets", forwards);
         velocity.add("input-packets", inputs);
+        velocity.add("input-mss", mssInputs);
         velocity.add("output-packets", outputs);
         velocity.add("vrrp-packets", vrrpPackets);
         velocity.add("linked-vrrp-packets", linkedVrrpPackets);
