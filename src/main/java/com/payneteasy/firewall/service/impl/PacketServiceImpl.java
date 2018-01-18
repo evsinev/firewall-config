@@ -88,6 +88,8 @@ public class PacketServiceImpl implements IPacketService {
                             || destinationHost.getDefaultIp().equals("10.12.12.50")
                             || destinationHost.getDefaultIp().equals("10.170.1.1")
                             || destinationHost.getDefaultIp().equals("10.53.50.33")
+                            || destinationHost.getDefaultIp().equals("10.2.2.56")
+                            || destinationHost.getDefaultIp().equals("10.2.2.57")
                             ) { // todo hot fix for SNAT
                         packet.source_nat_address = service.nat.address;
                         packet.type = "SNAT";
