@@ -129,6 +129,7 @@ public class HostAndLinkBuilder {
     private boolean canSkiPort(String aName) {
         return     aName.startsWith("eth0.")
                 || aName.startsWith("eth1.")
+                || aName.startsWith("eth4.")
                 || "ipmi_nuc".equals(aName);
     }
 
