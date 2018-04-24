@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/code
+    docker:
+      - image: circleci/openjdk:8-jdk-browsers
+    environment:
+      JVM_OPTS: -Xmx1200m
+    steps:
+      - checkout
+      - restore_cache:
+          key: jars-{{ checksum "pom.xml" }}-{{ checksum  ".mvn/wrapper/maven-wrapper.properties" }}
+      - run:
+          name: Download Dependencies
+          command: ./mvnw dependency:go-offline
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: jars-{{ checksum "pom.xml" }}-{{ checksum  ".mvn/wrapper/maven-wrapper.properties" }}
+      - run:
+          name: Run Tests
+          command: ./mvnw test
