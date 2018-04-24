@@ -1,22 +1,30 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/code
     docker:
-      - image: circleci/openjdk:8-jdk-browsers
+      - image: circleci/openjdk:8-jdk
+
+    working_directory: ~/repo
+
     environment:
-      JVM_OPTS: -Xmx1200m
+      MAVEN_OPTS: -Xmx3200m
+
     steps:
       - checkout
+
+      # Download and cache dependencies
       - restore_cache:
-          key: jars-{{ checksum "pom.xml" }}-{{ checksum  ".mvn/wrapper/maven-wrapper.properties" }}
-      - run:
-          name: Download Dependencies
-          command: ./mvnw dependency:go-offline
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: mvn test
+
       - save_cache:
           paths:
             - ~/.m2
-          key: jars-{{ checksum "pom.xml" }}-{{ checksum  ".mvn/wrapper/maven-wrapper.properties" }}
-      - run:
-          name: Run Tests
-          command: ./mvnw test
+          key: v1-dependencies-{{ checksum "pom.xml" }}
+
+      # run tests!
+      - run: mvn test
