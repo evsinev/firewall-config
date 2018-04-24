@@ -9,17 +9,18 @@ public class Host implements INode {
 
     public static final int PADDING = 10;
 
-    public Color backgroundColor = new Color(0xf8ecc9);
+    public Color backgroundColor;
     private final String name;
     private int x;
     private int y;
     private final Ports ports;
 
-    public Host(String aName, int aX, int aY, Ports aPorts) {
+    public Host(String aName, int aX, int aY, Ports aPorts, Color aBackgroundColor) {
         name = aName;
         x = aX;
         y = aY;
         ports = aPorts;
+        backgroundColor = aBackgroundColor;
     }
 
     public void draw(ICanvas aCanvas) {

@@ -1,5 +1,7 @@
 package com.payneteasy.firewall.l2.editor.create;
 
+import com.payneteasy.firewall.dao.IConfigDao;
+import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.l2.editor.model.*;
 import com.payneteasy.firewall.util.Strings;
 
@@ -9,22 +11,24 @@ import java.util.List;
 
 public class HostAndLinkBuilder {
 
-    Map<String, HostHolder> pengindHostMap = new TreeMap<>();
-    Set<LinkHolder>         linksSet       = new TreeSet<>();
-    Hosts                   hosts;
-    final Map<String, Color>      vlanColors;
-    List<LinkHolder>        removedLinks;
-    final L2CustomParameters customParameters;
+    private final Map<String, HostHolder> pengindHostMap;
+    private final Set<LinkHolder>         linksSet;
+    private final Map<String, Color>      vlanColors;
+    private final List<LinkHolder>        removedLinks;
+    private final L2CustomParameters      customParameters;
+    private final IPositionManager        positions;
+    private final IConfigDao              configDao;
 
-    final IPositionManager positions;
+    private       Hosts                   hosts;
 
-    public HostAndLinkBuilder(IPositionManager positions, L2CustomParameters aCustomParameters) {
-        this.positions = positions;
+    public HostAndLinkBuilder(IPositionManager positions, L2CustomParameters aCustomParameters, IConfigDao aConfigDao) {
+        this.positions   = positions;
         customParameters = aCustomParameters;
-        vlanColors = aCustomParameters.getVlanColors();
-        pengindHostMap = new HashMap<>();
-        linksSet       = aCustomParameters.getLinks();
-        removedLinks   = aCustomParameters.getRemovedLinks();
+        vlanColors       = aCustomParameters.getVlanColors();
+        pengindHostMap   = new HashMap<>();
+        linksSet         = aCustomParameters.getLinks();
+        removedLinks     = aCustomParameters.getRemovedLinks();
+        configDao        = aConfigDao;
 //        vlanColors.put("vlan_inside", new Color(0xF78181));
 //        vlanColors.put("vlan_trans", new Color(0x81F7D8));
 //        vlanColors.put("vlan_backup", new Color(0xA9BCF5));
@@ -120,10 +124,22 @@ public class HostAndLinkBuilder {
             hosts.add(new Host(entry.getKey()
                     , hostPoint.x
                     , hostPoint.y
-                    , new Ports(ports)));
+                    , new Ports(ports)
+                    , getHostColor(entry.getKey()))
+            );
         }
         this.hosts = new Hosts(hosts, vlanColors);
         return this.hosts;
+    }
+
+    private Color getHostColor(String aHostname) {
+        THost host = configDao.getHostByName(aHostname);
+        if(host.color == null) {
+            return new Color(0xf8ecc9);
+        } else {
+            String textColor = host.color;
+            return Color.decode(textColor);
+        }
     }
 
     private boolean canSkiPort(String aName) {
