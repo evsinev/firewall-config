@@ -1,0 +1,14 @@
+| srv-3 | Centos | CentOS Linux release 7.4.1708 (Core) | OS | https://path/to/hardening/Centos-7_hg |
+| srv-3 | openssh-server | 7.4p1-13.el7_4 | Secure shell server | https://path/to/hardening/Hg_openssh |
+| srv-3 | clamav-server | 0.99.3-1.el7 | Antivirus Software | https://path/to/hardening/clamav_hg |
+| srv-3_docker-name-1 | java | 8.161-1 | Java Development Kit | no hardening |
+| srv-3_docker-name-2 | java | 8.161-1 | Java Development Kit | no hardening |
+| srv-3 | openssl | 1.0.2k-8.el7 | Openssl Toolkit | without hardening |
+| srv-3 | syslog-ng | 3.5.6-3.el7 | Next-generation syslog server | https://path/to/hardening/syslog-ng_hg |
+| srv-3 | ntp | 4.2.6p5-25.el7.centos.2 | Time Sync Service | https://path/to/hardening/ntp_hg |
+| srv-3 | monit | 5.25.1-1.el7.centos | System Monitoring Software | https://path/to/hardening/monit_hg |
+| srv-3 | docker | 1.12.6-71.git3e8e77d.el7.centos.1 | open-source engine that automates the deployment of any application as a lightweight | https://path/to/hardening/docker_hg |
+| srv-3_docker-name-1 | tomcat | 7.0.84 | Java Application Server | https://path/to/hardening/Hg_tomcat |
+| srv-3_docker-name-2 | tomcat | 7.0.84 | Java Application Server | https://path/to/hardening/Hg_tomcat |
+| srv-3 | app1 | 3.34.07-05 R3.34.07 | Application 1 | no hardening |
+| srv-3 | app2 | version=1.0-b9-SNAPSHOT | Application 2 | no hardening |
