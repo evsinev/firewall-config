@@ -27,7 +27,7 @@ public class L2GraphCreator {
                 new File(aConfigDir, aPrefix  + "-l2-positions.properties")
                 , oldPositionsFile.exists() ? new PlainPositions(oldPositionsFile) : new EmptyPositionManager()
         );
-        builder = new HostAndLinkBuilder( positionManager, L2CustomParameters.load(new File(aConfigDir, aPrefix + "-l2-additions.yml")));
+        builder = new HostAndLinkBuilder( positionManager, L2CustomParameters.load(new File(aConfigDir, aPrefix + "-l2-additions.yml")), configDao);
     }
 
     public void create() {

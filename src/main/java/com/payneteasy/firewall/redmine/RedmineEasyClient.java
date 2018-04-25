@@ -107,10 +107,13 @@ public class RedmineEasyClient implements IRedmineClient {
         xmlNamespaceDictionary.set("", "");
         XmlHttpContent httpContent = new XmlHttpContent(xmlNamespaceDictionary, "wiki_page", wikiPageXml);
         httpContent.setMediaType(new HttpMediaType("application", "xml"));
+        System.out.println("httpContent = " + httpContent);
 
         GenericUrl genericUrl = new GenericUrl(url);
         genericUrl.getPathParts().add(pageName);
         HttpRequest httpRequest = requestFactory.buildPutRequest(genericUrl, httpContent);
+        httpRequest.setCurlLoggingEnabled(true);
+        httpRequest.setLoggingEnabled(true);
 
         HttpResponse response = httpRequest.execute();
         switch (response.getStatusCode()) {
