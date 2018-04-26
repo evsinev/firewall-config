@@ -1,0 +1,15 @@
+| srv-1 | Centos | CentOS Linux release 7.4.1708 (Core) | OS | https://path/to/hardening/Centos-7_hg |
+| srv-1 | openssh-server | 7.4p1-13.el7_4 | Secure shell server | https://path/to/hardening/Hg_openssh |
+| srv-1 | clamav-server | 0.99.3-1.el7 | Antivirus Software | https://path/to/hardening/clamav_hg |
+| srv-1_docker-name-1 | java | 8.161-1 | Java Development Kit | no hardening |
+| srv-1_docker-name-2 | java | 8.161-1 | Java Development Kit | no hardening |
+| srv-1 | openssl | 1.0.2k-8.el7 | Openssl Toolkit | without hardening |
+| srv-1 | syslog-ng | 3.5.6-3.el7 | Next-generation syslog server | https://path/to/hardening/syslog-ng_hg |
+| srv-1 | ntp | 4.2.6p5-25.el7.centos.2 | Time Sync Service | https://path/to/hardening/ntp_hg |
+| srv-1 | monit | 5.25.1-1.el7.centos | System Monitoring Software | https://path/to/hardening/monit_hg |
+| srv-1 | docker | 1.12.6-71.git3e8e77d.el7.centos.1 | open-source engine that automates the deployment of any application as a lightweight | https://path/to/hardening/docker_hg |
+| srv-1_docker-name-1 | tomcat | 8.5.28 | Java Application Server | https://path/to/hardening/Hg_tomcat |
+| srv-1_docker-name-2 | tomcat | 8.5.28 | Java Application Server | https://path/to/hardening/Hg_tomcat |
+| srv-1 | app1 | 3.42 | Web Application For Banks to accept Money Transfer data | no hardening |
+| srv-1 | app2 | 2.1.36 | Web Application For Banks to accept Money Transfer data | no hardening |
+| srv-1 | app3 | 2.21 | Web Application For Banks to accept Money Transfer data | no hardening |

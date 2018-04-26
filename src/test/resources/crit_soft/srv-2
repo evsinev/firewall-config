@@ -1,0 +1,8 @@
+| srv-2 | Centos | CentOS Linux release 7.4.1708 (Core) | OS | https://path/to/hardening/Centos-7_hg |
+| srv-2 | openssh-server | 7.4p1-13.el7_4 | Secure shell server | https://path/to/hardening/Hg_openssh |
+| srv-2 | mariadb-server | 10.0.34-1 | DBMS | https://path/to/hardening/mariadb_hg |
+| srv-2 | clamav-server | 0.99.3-1.el7 | Antivirus Software | https://path/to/hardening/clamav_hg |
+| srv-2 | openssl | 1.0.2k-8.el7 | Openssl Toolkit | no hardening |
+| srv-2 | syslog-ng | 3.5.6-3.el7 | Next-generation syslog server | https://path/to/hardening/syslog-ng_hg |
+| srv-2 | ntp | 4.2.6p5-25.el7.centos.2 | Time Sync Service | https://path/to/hardening/ntp_hg |
+| srv-2 | monit | 5.25.1-1.el7.centos | System Monitoring Software | https://path/to/hardening/monit_hg |
