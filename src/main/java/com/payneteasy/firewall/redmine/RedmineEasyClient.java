@@ -43,7 +43,7 @@ public class RedmineEasyClient implements IRedmineClient {
         Preconditions.checkNotNull(pageName, "page name");
         return pageName.replaceAll("\\.", "_") + ".xml";
     }
-
+    
     private final HttpRequestFactory requestFactory;
     private final String url;
 
@@ -100,7 +100,6 @@ public class RedmineEasyClient implements IRedmineClient {
         WikiPageXml wikiPageXml = new WikiPageXml();
         wikiPageXml.setComments(comment);
         wikiPageXml.setText(text);
-        wikiPageXml.setTitle(title);
         wikiPageXml.setVersion(version);
 
         XmlNamespaceDictionary xmlNamespaceDictionary = new XmlNamespaceDictionary();
