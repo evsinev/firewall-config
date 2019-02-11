@@ -20,4 +20,19 @@ public class ServiceInfo {
     public UrlInfo nat;
 
     public List<Access> access;
+
+    @Override
+    public String toString() {
+        return "ServiceInfo{" +
+                "appProtocol='" + appProtocol + '\'' +
+                ", protocol='" + protocol + '\'' +
+                ", port=" + port +
+                ", description='" + description + '\'' +
+                ", justification='" + justification + '\'' +
+                ", address='" + address + '\'' +
+                ", program='" + program + '\'' +
+                ", nat=" + nat +
+                ", access=" + access +
+                '}';
+    }
 }

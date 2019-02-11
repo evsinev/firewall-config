@@ -53,7 +53,7 @@ public class RedmineEasyClient implements IRedmineClient {
         Preconditions.checkNotNull(apiKey, "apiKey");
         Preconditions.checkArgument(apiKey.length() > 0, "illegal apiKey value <%s>", apiKey);
 
-        SSLContext sslContext = SSLContext.getInstance("TLSv1");
+        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
         sslContext.init(null, new TrustManager[] {new TrustAllTrustManager()}, null);
         HttpTransport transport = new NetHttpTransport.Builder().setSslSocketFactory(sslContext.getSocketFactory()).build();
         this.requestFactory = transport.createRequestFactory(new RedmineHttpRequestInitializer(apiKey));
@@ -91,7 +91,7 @@ public class RedmineEasyClient implements IRedmineClient {
         return httpRequest.execute().isSuccessStatusCode();
     }
     
-    private void execute(String pageName, String title, String text, String comment, Integer version) throws IOException {
+    public void execute(String pageName, String title, String text, String comment, Integer version) throws IOException {
         pageName = normalizePageName(pageName);
 
         long startTime = System.currentTimeMillis();

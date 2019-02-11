@@ -1,5 +1,6 @@
 package com.payneteasy.firewall.service.impl;
 
+import com.google.common.base.Preconditions;
 import com.google.common.net.InetAddresses;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.dao.model.*;
@@ -8,12 +9,15 @@ import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.*;
 import com.payneteasy.firewall.util.Networks;
 import com.payneteasy.firewall.util.Strings;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.payneteasy.firewall.util.Strings.first;
 import static com.payneteasy.firewall.util.Strings.hasText;
 import static java.lang.String.format;
@@ -25,6 +29,10 @@ public class PacketServiceImpl implements IPacketService {
 
     public PacketServiceImpl(IConfigDao aConfigDao) {
         theConfigDao = aConfigDao;
+        DumperOptions dumperOptions = new DumperOptions();
+        dumperOptions.setIndent(4);
+        dumperOptions.setPrettyFlow(true);
+        yaml = new Yaml(dumperOptions);
     }
 
     @Override
@@ -91,6 +99,14 @@ public class PacketServiceImpl implements IPacketService {
                             || destinationHost.getDefaultIp().equals("10.2.2.56")
                             || destinationHost.getDefaultIp().equals("10.2.2.57")
                             ) { // todo hot fix for SNAT
+
+                        checkNotNull(service.nat, "Direction %s -> %s:%s wants to use NAT address but no NAT address was found."
+                                        + "\n\n    Source host     : %s"
+                                        + "\n\n    Target service  : %s"
+                                        + "\n\n    Destination host: %s"
+                                , sourceHost.name, service.address, service.port
+                                , yaml.dump(sourceHost), yaml.dump(service), yaml.dump(destinationHost));
+                        
                         packet.source_nat_address = service.nat.address;
                         packet.type = "SNAT";
                     }
@@ -675,4 +691,5 @@ public class PacketServiceImpl implements IPacketService {
     }
 
     private final IConfigDao theConfigDao;
+    private final Yaml       yaml;
 }
