@@ -1,6 +1,7 @@
 package com.payneteasy.firewall.l2.editor.model;
 
 import com.payneteasy.firewall.l2.editor.graphics.ICanvas;
+import com.payneteasy.firewall.service.model.LinkInfo;
 
 import java.awt.*;
 
@@ -38,6 +39,15 @@ public class Link {
                 , leftStart.y + leftRectangle.y
                 , rightStart.x + rightRectangle.x
                 , rightStart.y + rightRectangle.y
+        );
+    }
+
+    public LinkInfo createLinkInfo() {
+        Color color = leftPort.backgroundColor != Color.WHITE ? leftPort.backgroundColor : rightPort.backgroundColor;
+        return new LinkInfo(
+                leftHost.name + "/" + leftPort.displayName
+                , rightHost.name + "/" + rightPort.displayName
+                , Integer.toHexString(0xffffff & color.getRGB())
         );
     }
 }

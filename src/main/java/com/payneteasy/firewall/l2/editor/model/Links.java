@@ -18,4 +18,7 @@ public class Links {
         }
     }
 
+    public List<Link> getLinks() {
+        return links;
+    }
 }

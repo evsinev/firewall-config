@@ -8,7 +8,7 @@ import java.awt.*;
 public class Port implements INode {
 
     private final String name;
-    private final String displayName;
+    final String displayName;
 
     private int x;
     private int y;
@@ -16,7 +16,7 @@ public class Port implements INode {
     private int textWidth  = 0;
     private int textHeight = 0;
 
-    private final Color backgroundColor;
+    final Color backgroundColor;
 
     public Port(String aName, int aX, int aY, Color aBackgroundColor) {
         backgroundColor = aBackgroundColor;

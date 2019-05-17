@@ -184,7 +184,13 @@ public class HostAndLinkBuilder {
 
     public Links createLinks() {
         List<Link> links = new ArrayList<>();
+        if(hosts == null) {
+            throw new IllegalStateException("Hosts is null");
+        }
         for (LinkHolder holder : linksSet) {
+            if(holder == null) {
+                throw new IllegalStateException("LinkHolder is null");
+            }
             links.add(hosts.createLink(holder.leftHost, holder.leftPort, holder.rightHost, holder.rightPort, holder.linkType));
         }
         return new Links(links);

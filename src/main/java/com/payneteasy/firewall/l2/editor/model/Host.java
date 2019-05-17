@@ -10,7 +10,7 @@ public class Host implements INode {
     public static final int PADDING = 10;
 
     public Color backgroundColor;
-    private final String name;
+    final String name;
     private int x;
     private int y;
     private final Ports ports;

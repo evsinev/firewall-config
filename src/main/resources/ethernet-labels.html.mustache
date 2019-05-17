@@ -1,0 +1,55 @@
+<html>
+<head>
+    <style>
+        table {
+            border: 0;
+            border-spacing: 0;
+            width: 180mm;
+            border-right: 0.05mm dotted #ddd;
+
+        }
+
+        td {
+            width: 30mm;
+            border-left:   0.05mm dotted #ddd;
+            border-top:    0.05mm dotted #ddd;
+            border-bottom: 0.05mm dotted #ddd;
+            font-family: monospace;
+            font-size: 4mm;
+            padding: 2mm;
+             white-space:nowrap;
+        }
+
+
+        .to-top {
+            padding-bottom: 20mm;
+        }
+
+        .from-bottom {
+            -webkit-transform: rotate(-180deg);
+        }
+
+        .to-bottom {
+            -webkit-transform: rotate(-180deg);
+        }
+    </style>
+</head>
+<body>
+
+<table>
+    {{#rows}}
+    <tr>
+        {{#cells}}
+        <td style="background-color: #{{colorHex}}; -webkit-print-color-adjust: exact; ">
+            <div class="from-top">{{leftAddress}}</div>
+            <div class="to-top">{{rightAddress}}</div>
+
+            <div class="from-bottom">{{leftAddress}}</div>
+            <div class="to-bottom">{{rightAddress}}</div>
+        </td>
+        {{/cells}}
+    </tr>
+    {{/rows}}
+</table>
+</body>
+</html>
