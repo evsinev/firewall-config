@@ -74,6 +74,11 @@ public class Host implements INode {
         y = aY;
     }
 
+    public void shift(int aXOffset, int aYOffset) {
+        x += aXOffset;
+        y += aYOffset;
+    }
+
     @Override
     public Point createOffset(int aX, int aY) {
         return new Point(x - aX, y - aY);

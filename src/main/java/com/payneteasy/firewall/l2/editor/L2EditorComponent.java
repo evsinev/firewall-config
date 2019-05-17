@@ -49,4 +49,25 @@ public class L2EditorComponent extends JComponent {
     public void setScale(double aScale) {
         scale = aScale;
     }
+
+    public void shiftRight() {
+        hosts.moveHosts(1, 0);
+        repaint();
+    }
+
+    public void shiftLeft() {
+        hosts.moveHosts(-1, 0);
+        repaint();
+    }
+
+    public void shiftTop() {
+        hosts.moveHosts(0, -1);
+        repaint();
+    }
+
+    public void shiftBottom() {
+        hosts.moveHosts(0, 1);
+        repaint();
+    }
+
 }

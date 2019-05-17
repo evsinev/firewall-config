@@ -95,6 +95,30 @@ public class L2Editor implements KeyListener {
                 save();
                 return;
 
+            case KeyEvent.VK_RIGHT:
+                if(e.isShiftDown()) {
+                    component.shiftRight();
+                }
+                return;
+
+            case KeyEvent.VK_LEFT:
+                if(e.isShiftDown()) {
+                    component.shiftLeft();
+                }
+                return;
+
+            case KeyEvent.VK_UP:
+                if(e.isShiftDown()) {
+                    component.shiftTop();
+                }
+                return;
+
+            case KeyEvent.VK_DOWN:
+                if(e.isShiftDown()) {
+                    component.shiftBottom();
+                }
+                return;
+
             default:
 
         }

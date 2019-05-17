@@ -124,4 +124,10 @@ public class Hosts {
             host.save(aSaver);
         }
     }
+
+    public void moveHosts(int aXOffset, int aYOffset) {
+        for (Host host : hosts) {
+            host.shift(aXOffset, aYOffset);
+        }
+    }
 }
