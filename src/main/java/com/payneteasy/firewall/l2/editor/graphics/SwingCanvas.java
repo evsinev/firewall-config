@@ -8,6 +8,7 @@ public class SwingCanvas implements ICanvas {
 
     public SwingCanvas(Graphics2D graphics) {
         this.graphics = graphics;
+        graphics.setFont(graphics.getFont().deriveFont(16.0f));
     }
 
     @Override

@@ -101,7 +101,7 @@ public class MainL2Labels {
         
     }
 
-    static class Row {
+    private static class Row {
 
         private final List<LinkInfo> cells = new ArrayList<>();
 
