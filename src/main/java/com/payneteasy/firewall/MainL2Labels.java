@@ -56,7 +56,7 @@ public class MainL2Labels {
         filePrinter.write(new File("target/labels.html"));
     }
 
-    private List<LinkInfo> createLinkInfos(IConfigDao aDao, File aConfigDir) {
+    List<LinkInfo> createLinkInfos(IConfigDao aDao, File aConfigDir) {
         System.out.println("Creating link infos ...");
         L2GraphCreator graphCreator = new L2GraphCreator(aDao, aConfigDir, "current");
         graphCreator.create();
