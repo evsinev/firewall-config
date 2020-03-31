@@ -2,6 +2,7 @@ package com.payneteasy.firewall.util;
 
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.dao.model.TInterface;
+import com.payneteasy.firewall.service.model.ServiceInfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +53,32 @@ public class Networks {
         return Strings.hasText(aAddress) && !"skip".equals(aAddress);
     }
 
+    /**
+     * Checks only the destination service ip address against all ip addresses in the source host
+     * @param aSourceHost          source host
+     * @param aDestinationService  destination service
+     * @return source host is the same network with destination service
+     */
+    public static boolean isInSameNetwork(THost aSourceHost, ServiceInfo aDestinationService) {
+        for (TInterface sourceInterface : aSourceHost.interfaces) {
+            List<String> sourceAddresses = sourceInterface.getAllIpAddresses();
+            String destAddress = aDestinationService.address;
+            for (String sourceAddress : sourceAddresses) {
+                if(isInNetwork(sourceAddress, destAddress)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+
+    }
+
+    /**
+     * Checks for all destination addresses
+     * @param aSourceHost source host
+     * @param aDestinationHost destination host
+     * @return both hosts are in the same network
+     */
     public static boolean isInSameNetwork(THost aSourceHost, THost aDestinationHost) {
         for (TInterface sourceInterface : aSourceHost.interfaces) {
             List<String> sourceAddresses = sourceInterface.getAllIpAddresses();

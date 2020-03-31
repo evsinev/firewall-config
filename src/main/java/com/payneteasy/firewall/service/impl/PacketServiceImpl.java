@@ -59,7 +59,7 @@ public class PacketServiceImpl implements IPacketService {
 
                     THost sourceHost = access.host;
 
-                    if (filterHosts(sourceHost, middleHost, destinationHost)) {
+                    if (filterHosts(sourceHost, middleHost, destinationHost, service)) {
                         continue;
                     }
 
@@ -155,7 +155,7 @@ public class PacketServiceImpl implements IPacketService {
         return ret;
     }
 
-    private boolean filterHosts(THost sourceHost, THost middleHost, THost destinationHost) {
+    private boolean filterHosts(THost sourceHost, THost middleHost, THost destinationHost, ServiceInfo aDestinationService) {
         // skip access for the same host
         if(middleHost.name.equals(sourceHost.name)) {
             return true;
@@ -171,7 +171,7 @@ public class PacketServiceImpl implements IPacketService {
         }
 
         // source and destination have addresses in the same network
-        if ( Networks.isInSameNetwork(sourceHost, destinationHost)) {
+        if ( Networks.isInSameNetwork(sourceHost, aDestinationService)) {
             return true;
         }
 
