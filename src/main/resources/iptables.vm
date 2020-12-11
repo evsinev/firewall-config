@@ -48,6 +48,10 @@
 #end
 #end
 
+# Enable ICMP input for all interfaces
+-A INPUT --protocol icmp -j ACCEPT
+
+
 #
 # OUTPUT packets
 #
@@ -62,6 +66,9 @@
 
 #end
 
+# Enable ICMP output for all interfaces
+-A OUTPUT --protocol icmp -j ACCEPT
+
 #
 # FORWARD packets 2
 #
@@ -75,6 +82,9 @@
 #end
 
 #end
+
+# Enable ICMP forward for all interfaces
+-A INPUT --protocol icmp -j ACCEPT
 
 
 # for tcp --reject-with tcp-reset
