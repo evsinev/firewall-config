@@ -84,7 +84,7 @@
 #end
 
 # Enable ICMP forward for all interfaces
--A INPUT --protocol icmp -j ACCEPT
+-A FORWARD --protocol icmp -j ACCEPT
 
 
 # for tcp --reject-with tcp-reset
