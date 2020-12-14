@@ -49,7 +49,10 @@
 #end
 
 # Enable ICMP input for all interfaces
--A INPUT --protocol icmp -j ACCEPT
+-A INPUT --protocol icmp --icmp-type echo-reply               -j ACCEPT
+-A INPUT --protocol icmp --icmp-type destination-unreachable  -j ACCEPT
+-A INPUT --protocol icmp --icmp-type echo-request             -j ACCEPT
+-A INPUT --protocol icmp --icmp-type time-exceeded echo-reply -j ACCEPT
 
 
 #
@@ -67,7 +70,10 @@
 #end
 
 # Enable ICMP output for all interfaces
--A OUTPUT --protocol icmp -j ACCEPT
+-A OUTPUT --protocol icmp --icmp-type echo-reply               -j ACCEPT
+-A OUTPUT --protocol icmp --icmp-type destination-unreachable  -j ACCEPT
+-A OUTPUT --protocol icmp --icmp-type echo-request             -j ACCEPT
+-A OUTPUT --protocol icmp --icmp-type time-exceeded echo-reply -j ACCEPT
 
 #
 # FORWARD packets 2
@@ -83,9 +89,13 @@
 
 #end
 
+#if ( $forward-packets.size() > 0 )
 # Enable ICMP forward for all interfaces
--A FORWARD --protocol icmp -j ACCEPT
-
+-A FORWARD --protocol icmp --icmp-type echo-reply               -j ACCEPT
+-A FORWARD --protocol icmp --icmp-type destination-unreachable  -j ACCEPT
+-A FORWARD --protocol icmp --icmp-type echo-request             -j ACCEPT
+-A FORWARD --protocol icmp --icmp-type time-exceeded echo-reply -j ACCEPT
+#end
 
 # for tcp --reject-with tcp-reset
 # for REJECT we send tcp packet with ACK and RST flags
