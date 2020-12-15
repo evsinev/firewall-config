@@ -52,7 +52,7 @@
 -A INPUT --protocol icmp --icmp-type echo-reply               -j ACCEPT
 -A INPUT --protocol icmp --icmp-type destination-unreachable  -j ACCEPT
 -A INPUT --protocol icmp --icmp-type echo-request             -j ACCEPT
--A INPUT --protocol icmp --icmp-type time-exceeded echo-reply -j ACCEPT
+-A INPUT --protocol icmp --icmp-type time-exceeded            -j ACCEPT
 
 
 #
@@ -73,7 +73,7 @@
 -A OUTPUT --protocol icmp --icmp-type echo-reply               -j ACCEPT
 -A OUTPUT --protocol icmp --icmp-type destination-unreachable  -j ACCEPT
 -A OUTPUT --protocol icmp --icmp-type echo-request             -j ACCEPT
--A OUTPUT --protocol icmp --icmp-type time-exceeded echo-reply -j ACCEPT
+-A OUTPUT --protocol icmp --icmp-type time-exceeded            -j ACCEPT
 
 #
 # FORWARD packets 2
@@ -94,7 +94,7 @@
 -A FORWARD --protocol icmp --icmp-type echo-reply               -j ACCEPT
 -A FORWARD --protocol icmp --icmp-type destination-unreachable  -j ACCEPT
 -A FORWARD --protocol icmp --icmp-type echo-request             -j ACCEPT
--A FORWARD --protocol icmp --icmp-type time-exceeded echo-reply -j ACCEPT
+-A FORWARD --protocol icmp --icmp-type time-exceeded            -j ACCEPT
 #end
 
 # for tcp --reject-with tcp-reset
