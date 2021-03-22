@@ -101,6 +101,8 @@ public class PacketServiceImpl implements IPacketService {
                             || destinationHost.getDefaultIp().equals("10.102.2.57")
                             || destinationHost.getDefaultIp().equals("10.102.2.56")
                             || destinationHost.getDefaultIp().equals("10.102.2.56")
+                            || destinationHost.getDefaultIp().equals("10.58.36.1")
+                            || destinationHost.getDefaultIp().equals("172.16.229.1")
                             ) { // todo hot fix for SNAT
 
                         checkNotNull(service.nat, "Direction %s -> %s:%s wants to use NAT address but no NAT address was found."
