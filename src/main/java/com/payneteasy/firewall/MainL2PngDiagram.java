@@ -22,6 +22,8 @@ public class MainL2PngDiagram extends AbstractDirPrefixFilterCommand {
 
     @Override
     public Integer call() throws Exception {
+        System.out.printf("Processing %s* in the %s directory...\n", prefix, dir);
+
         IConfigDao configDao = new ConfigDaoYaml(dir);
         L2GraphCreator creator = new L2GraphCreator(configDao, dir, prefix);
         creator.create(getFilterArray());
@@ -45,7 +47,10 @@ public class MainL2PngDiagram extends AbstractDirPrefixFilterCommand {
         graphics.setColor(Color.BLACK);
         component.paintComponent(graphics);
 
-        ImageIO.write(bufferedImage, "PNG", new File(prefix+ "-l2.png"));
+        File pngFile = new File(prefix + "-l2.png");
+        ImageIO.write(bufferedImage, "PNG", pngFile);
+
+        System.out.printf("Wrote to file %s\n", pngFile.getAbsolutePath());
 
         return 0;
     }
@@ -53,7 +58,7 @@ public class MainL2PngDiagram extends AbstractDirPrefixFilterCommand {
     public static void main(String[] args) throws IOException {
         System.exit(
                 new CommandLine(
-                        new MainL2Labels()
+                        new MainL2PngDiagram()
                 ).execute(args)
         );
     }
