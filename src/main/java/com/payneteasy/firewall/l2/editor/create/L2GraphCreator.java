@@ -30,8 +30,8 @@ public class L2GraphCreator {
         builder = new HostAndLinkBuilder( positionManager, L2CustomParameters.load(new File(aConfigDir, aPrefix + "-l2-additions.yml")), configDao);
     }
 
-    public void create() {
-        final Collection<THost> hosts = configDao.listHostsByFilter("internal", "ipmi", "internet");
+    public void create(String[] aFilter) {
+        final Collection<THost> hosts = configDao.listHostsByFilter(aFilter);
 
         // add hosts
         for (THost host : hosts) {

@@ -58,6 +58,12 @@
             <version>3.7</version>
         </dependency>
 
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
+            <version>4.6.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>

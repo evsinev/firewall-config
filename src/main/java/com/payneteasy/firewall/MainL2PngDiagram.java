@@ -4,6 +4,8 @@ import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
 import com.payneteasy.firewall.l2.editor.L2EditorComponent;
 import com.payneteasy.firewall.l2.editor.create.L2GraphCreator;
+import com.payneteasy.firewall.shell.AbstractDirPrefixFilterCommand;
+import picocli.CommandLine;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -11,15 +13,18 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class MainL2PngDiagram {
+@CommandLine.Command(
+        name = "MainL2PngDiagram"
+        , mixinStandardHelpOptions = true
+        , description = "Generates L2 png diagram"
+)
+public class MainL2PngDiagram extends AbstractDirPrefixFilterCommand {
 
-    public static void main(String[] args) throws IOException {
-        File dir = new File(args[0]);
-        String prefix = args[1];
-
+    @Override
+    public Integer call() throws Exception {
         IConfigDao configDao = new ConfigDaoYaml(dir);
         L2GraphCreator creator = new L2GraphCreator(configDao, dir, prefix);
-        creator.create();
+        creator.create(getFilterArray());
 
 
         L2EditorComponent component = new L2EditorComponent(creator.getHosts(), creator.getLinks());
@@ -42,6 +47,14 @@ public class MainL2PngDiagram {
 
         ImageIO.write(bufferedImage, "PNG", new File(prefix+ "-l2.png"));
 
-        System.exit(0);
+        return 0;
+    }
+
+    public static void main(String[] args) throws IOException {
+        System.exit(
+                new CommandLine(
+                        new MainL2Labels()
+                ).execute(args)
+        );
     }
 }

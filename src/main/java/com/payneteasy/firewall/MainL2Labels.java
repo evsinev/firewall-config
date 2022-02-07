@@ -2,11 +2,12 @@ package com.payneteasy.firewall;
 
 import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
-import com.payneteasy.firewall.l2.editor.create.L2CustomParameters;
 import com.payneteasy.firewall.l2.editor.create.L2GraphCreator;
 import com.payneteasy.firewall.l2.editor.model.Link;
 import com.payneteasy.firewall.service.model.LinkInfo;
+import com.payneteasy.firewall.shell.AbstractDirPrefixFilterCommand;
 import com.payneteasy.firewall.util.MustacheFilePrinter;
+import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,10 +15,16 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class MainL2Labels {
+@CommandLine.Command(
+        name = "MainL2Labels"
+        , mixinStandardHelpOptions = true
+        , description = "Generates L2 labels"
+)
+public class MainL2Labels extends AbstractDirPrefixFilterCommand {
 
-    public static void main(String[] args) throws IOException {
-        File configDir = new File(args[0]);
+    @Override
+    public Integer call() throws Exception {
+        File configDir = dir;
         if(!configDir.exists()) throw new IllegalStateException("Config dir "+configDir.getAbsolutePath()+" is not exists");
 
         IConfigDao     configDao = new ConfigDaoYaml(configDir);
@@ -27,6 +34,15 @@ public class MainL2Labels {
 
         main.printLinkInfos(rows);
 
+        return 0;
+    }
+
+    public static void main(String[] args) throws IOException {
+        System.exit(
+                new CommandLine(
+                        new MainL2Labels()
+                ).execute(args)
+        );
     }
 
     private static List<LinkInfo> sort(List<LinkInfo> aLinks) {
@@ -58,8 +74,8 @@ public class MainL2Labels {
 
     List<LinkInfo> createLinkInfos(IConfigDao aDao, File aConfigDir) {
         System.out.println("Creating link infos ...");
-        L2GraphCreator graphCreator = new L2GraphCreator(aDao, aConfigDir, "current");
-        graphCreator.create();
+        L2GraphCreator graphCreator = new L2GraphCreator(aDao, aConfigDir, prefix);
+        graphCreator.create(getFilterArray());
         graphCreator.getHosts();
         
         List<Link> links = graphCreator.getLinks().getLinks();

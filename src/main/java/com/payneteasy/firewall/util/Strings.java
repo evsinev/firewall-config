@@ -1,8 +1,9 @@
 package com.payneteasy.firewall.util;
 
-import com.payneteasy.firewall.dao.model.THost;
-
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+import java.util.StringTokenizer;
 
 public class Strings {
 
@@ -53,5 +54,14 @@ public class Strings {
             }
         }
         return null;
+    }
+
+    public static String[] split(String aText, char ... aDelimiters) {
+        StringTokenizer st = new StringTokenizer(aText, new String(aDelimiters));
+        List<String> list = new ArrayList<>();
+        while(st.hasMoreTokens()) {
+            list.add(st.nextToken());
+        }
+        return list.toArray(new String[0]);
     }
 }

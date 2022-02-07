@@ -14,7 +14,6 @@ import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Properties;
 
 public class L2Editor implements KeyListener {
@@ -25,6 +24,7 @@ public class L2Editor implements KeyListener {
     double scale = 1;
     File configDir;
     String prefix;
+    String[] filter;
 
     public L2Editor() {
         frame = new JFrame("L2" );
@@ -34,13 +34,14 @@ public class L2Editor implements KeyListener {
 
     }
 
-    public void show(File aConfigDir, String aPrefix) throws IOException {
+    public void show(File aConfigDir, String aPrefix, String[] aFilter) throws IOException {
         prefix = aPrefix;
         configDir = aConfigDir;
+        filter = aFilter;
 
         IConfigDao configDao = new ConfigDaoYaml(aConfigDir);
         L2GraphCreator creator = new L2GraphCreator(configDao, aConfigDir, aPrefix);
-        creator.create();
+        creator.create(aFilter);
 
         final Hosts hosts = creator.getHosts();
         component = new L2EditorComponent(hosts, creator.getLinks());
@@ -85,7 +86,7 @@ public class L2Editor implements KeyListener {
                     component.removeMouseListener(mouseListener);
                     component.removeMouseMotionListener(mouseListener);
                     frame.removeAll();
-                    show(configDir, prefix);
+                    show(configDir, prefix, filter);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
