@@ -28,11 +28,10 @@ public class MainL2Labels extends AbstractDirPrefixFilterCommand {
         if(!configDir.exists()) throw new IllegalStateException("Config dir "+configDir.getAbsolutePath()+" is not exists");
 
         IConfigDao     configDao = new ConfigDaoYaml(configDir);
-        MainL2Labels   main      = new MainL2Labels();
-        List<LinkInfo> infos     = sort(main.createLinkInfos(configDao, configDir));
+        List<LinkInfo> infos     = sort(createLinkInfos(configDao, configDir));
         List<Row>      rows      = createRows(infos);
 
-        main.printLinkInfos(rows);
+        printLinkInfos(rows);
 
         return 0;
     }
