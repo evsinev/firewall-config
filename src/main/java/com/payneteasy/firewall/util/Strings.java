@@ -56,6 +56,10 @@ public class Strings {
         return null;
     }
 
+    public static String[] splitParams(String aText) {
+        return split(aText, ',', ';', ' ', '\t', '\n', '\r');
+    }
+
     public static String[] split(String aText, char ... aDelimiters) {
         StringTokenizer st = new StringTokenizer(aText, new String(aDelimiters));
         List<String> list = new ArrayList<>();

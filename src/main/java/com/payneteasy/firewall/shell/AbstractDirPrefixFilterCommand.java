@@ -22,4 +22,13 @@ public abstract class AbstractDirPrefixFilterCommand implements Callable<Integer
         return split(filter, ',', ';', ' ', '\t', '\n', '\r');
     }
 
+
+    protected static void runCommand(AbstractDirPrefixFilterCommand aCommand, String[] args) {
+        System.exit(
+                new CommandLine(
+                        aCommand
+                ).execute(args)
+        );
+    }
+
 }

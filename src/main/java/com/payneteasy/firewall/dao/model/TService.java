@@ -13,6 +13,7 @@ public class TService {
     public String nat;
     public String dip;
     public List<String> access;
+    public List<String> tags;
 
     public String name;
     public String justification;
