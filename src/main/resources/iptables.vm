@@ -28,6 +28,16 @@
 #
 # INPUT packets
 #
+#if ( $blocked-ip-addresses.size() > 0 )
+#
+# BLOCKED HOSTS
+#
+#foreach( $block in $blocked-ip-addresses )
+# $block.reason
+-A INPUT -s $block.ip -j $block.type
+#end
+
+#end
 #foreach( $p in $input-packets )
 # $p.source_address_name -> $p.app_protocol
 #if ($p.destination_port > 0 )
@@ -78,6 +88,16 @@
 #
 # FORWARD packets 2
 #
+#if ( $blocked-ip-addresses.size() > 0 )
+#
+# BLOCKED HOSTS
+#
+#foreach( $p in $blocked-ip-addresses )
+# $p.reason
+-A FORWARD -s $p.ip -j $p.type
+#end
+
+#end
 #foreach( $p in $forward-packets )
 # $p.source_address_name -> $p.app_protocol://$p.destination_address_name   $p.source_service $p.source_to_dest_service_sign $p.destination_service
 #if ($p.destination_port > 0 )

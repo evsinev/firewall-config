@@ -26,6 +26,8 @@ public class THost {
 
     public String color;
 
+    public List<TBlockedIpAddress> blockedIpAddresses;
+
     public String getDefaultIp() {
         String ip = interfaces.get(0).ip;
         if(Networks.isIpAddress(ip)) {

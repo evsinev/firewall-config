@@ -2,6 +2,7 @@ package com.payneteasy.firewall;
 
 import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
+import com.payneteasy.firewall.dao.model.TBlockedIpAddress;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.IPacketService;
@@ -47,12 +48,13 @@ public class Main {
     }
 
     private static void createFirewallConfig(String host, String aDir, IPacketService packetService) throws ConfigurationException, IOException {
-        List<Packet> forwards = packetService.getForwardPackets(host);
-        List<InputPacket> inputs = packetService.getInputPackets(host);
-        Set<InputMssPacket> mssInputs = packetService.getInputMssPackets(host);
-        List<OutputPacket> outputs = packetService.getOutputPackets(host);
-        List<VrrpPacket> vrrpPackets = packetService.getVrrpPackets(host);
-        List<LinkedVrrpPacket> linkedVrrpPackets = packetService.getLinkedVrrpPackets(host);
+        List<Packet>            forwards           = packetService.getForwardPackets(host);
+        List<InputPacket>       inputs             = packetService.getInputPackets(host);
+        Set<InputMssPacket>     mssInputs          = packetService.getInputMssPackets(host);
+        List<OutputPacket>      outputs            = packetService.getOutputPackets(host);
+        List<VrrpPacket>        vrrpPackets        = packetService.getVrrpPackets(host);
+        List<LinkedVrrpPacket>  linkedVrrpPackets  = packetService.getLinkedVrrpPackets(host);
+        List<TBlockedIpAddress> blockedIpAddresses = packetService.getBlockedIpAddresses(host);
 
         VelocityBuilder velocity = new VelocityBuilder();
         velocity.add("generated-date", new Date());
@@ -63,6 +65,7 @@ public class Main {
         velocity.add("output-packets", outputs);
         velocity.add("vrrp-packets", vrrpPackets);
         velocity.add("linked-vrrp-packets", linkedVrrpPackets);
+        velocity.add("blocked-ip-addresses", blockedIpAddresses);
 
         PrintWriter out = new PrintWriter(new FileWriter(new File(aDir, host)));
         try {

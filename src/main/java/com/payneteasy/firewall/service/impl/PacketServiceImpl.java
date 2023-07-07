@@ -238,6 +238,12 @@ public class PacketServiceImpl implements IPacketService {
     }
 
     @Override
+    public List<TBlockedIpAddress> getBlockedIpAddresses(String aHostname) {
+        THost targetHost = theConfigDao.getHostByName(aHostname);
+        return targetHost.blockedIpAddresses != null ? targetHost.blockedIpAddresses : Collections.emptyList();
+    }
+
+    @Override
     public List<InputPacket> getInputPackets(String aHostname) throws ConfigurationException {
         List<InputPacket> ret = new ArrayList<InputPacket>();
 
