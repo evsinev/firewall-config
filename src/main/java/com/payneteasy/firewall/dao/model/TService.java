@@ -14,6 +14,7 @@ public class TService {
     public String dip;
     public List<String> access;
     public List<String> tags;
+    public String external;
 
     public String name;
     public String justification;

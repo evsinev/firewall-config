@@ -31,7 +31,7 @@ public class MainExternalServices extends AbstractDirPrefixFilterCommand {
 
         for (THost host : hosts) {
             for (TService service : host.services) {
-                if(isExternal(service)) {
+                if(isExternal(host, service)) {
                     printRow(
                               host.name              // |_. host.name
                             , host.description       // |_. host.description
@@ -43,6 +43,7 @@ public class MainExternalServices extends AbstractDirPrefixFilterCommand {
                             , service.program        // |_. service.program
                             , service.url            // |_. service.url
                             , service.nat            // |_. service.nat
+                            , service.external       // |_. service.external
                     );
                 }
             }
@@ -51,7 +52,11 @@ public class MainExternalServices extends AbstractDirPrefixFilterCommand {
         return 0;
     }
 
-    private boolean isExternal(TService aService) {
+    private boolean isExternal(THost host, TService aService) {
+        if(("public access services".equals(host.description) || "nginx server".equals(host.description)) && aService.url.startsWith("http")) {
+            return false;
+        }
+
         List<String> tags = aService.tags;
         if(tags != null) {
             for (String tag : splitParams(tagsOption)) {
