@@ -118,6 +118,7 @@ public class RedmineEasyClient implements IRedmineClient {
         switch (response.getStatusCode()) {
             case 200:
             case 201:
+            case 204:
                 System.out.println("OK in "+(System.currentTimeMillis() - startTime)+" ms");
                 break;
 
