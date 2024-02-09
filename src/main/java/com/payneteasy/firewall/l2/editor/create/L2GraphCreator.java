@@ -36,7 +36,7 @@ public class L2GraphCreator {
         // add hosts
         for (THost host : hosts) {
             builder.addHost(host.name);
-            for (TInterface iface : host.interfaces) {
+            for (TInterface iface : host.getL2Interfaces()) {
                 if(hasText(iface.name)) {
                     builder.addPort(host.name, iface.name, iface.vlan);
                 }
@@ -48,7 +48,7 @@ public class L2GraphCreator {
 
         // links
         for (THost host : hosts) {
-            for (TInterface iface : host.interfaces) {
+            for (TInterface iface : host.getL2Interfaces()) {
                 if(hasText(iface.link)) {
                     builder.addLink(host.name, iface.name, iface.link);
                 }

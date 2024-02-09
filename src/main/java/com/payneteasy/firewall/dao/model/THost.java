@@ -5,6 +5,7 @@ import com.payneteasy.firewall.util.Networks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -51,6 +52,12 @@ public class THost {
     }
 
     public String services_links;
+
+    public List<TInterface> getL2Interfaces() {
+        return interfaces.stream()
+                .filter(it -> !it.name.startsWith("bond"))
+                .collect(Collectors.toList());
+    }
 
     @Override
     public String toString() {
