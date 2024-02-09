@@ -5,6 +5,7 @@ import com.payneteasy.firewall.util.Networks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +60,8 @@ public class THost {
                 .collect(Collectors.toList());
     }
 
+    public List<TCustomRule> customRules;
+
     @Override
     public String toString() {
         return "THost{" +
@@ -70,7 +73,9 @@ public class THost {
                 ", interfaces=" + interfaces +
                 ", services=" + services +
                 ", color='" + color + '\'' +
+                ", blockedIpAddresses=" + blockedIpAddresses +
                 ", services_links='" + services_links + '\'' +
+                ", customRules=" + customRules +
                 '}';
     }
 }

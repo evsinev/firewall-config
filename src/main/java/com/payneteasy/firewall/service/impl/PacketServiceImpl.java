@@ -16,6 +16,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.payneteasy.firewall.util.Strings.first;
@@ -549,6 +550,20 @@ public class PacketServiceImpl implements IPacketService {
         });
         return ret;
     }
+
+    @Override
+    public List<TCustomRule> getCustomRules(String aHostname, ChainType aChainType) {
+        THost host = theConfigDao.getHostByName(aHostname);
+
+        if (host.customRules == null) {
+            return Collections.emptyList();
+        }
+
+        return host.customRules.stream()
+                .filter(it -> it.chain == aChainType)
+                .collect(Collectors.toList());
+    }
+
 
     private String findInterfaceByIp(String aAddress, List<TInterface> aInterfaces, String aHostname) throws ConfigurationException {
         for (TInterface iface : aInterfaces) {

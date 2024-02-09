@@ -2,6 +2,7 @@ package com.payneteasy.firewall;
 
 import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
+import com.payneteasy.firewall.dao.model.ChainType;
 import com.payneteasy.firewall.dao.model.TBlockedIpAddress;
 import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.service.ConfigurationException;
@@ -66,6 +67,11 @@ public class Main {
         velocity.add("vrrp-packets", vrrpPackets);
         velocity.add("linked-vrrp-packets", linkedVrrpPackets);
         velocity.add("blocked-ip-addresses", blockedIpAddresses);
+        velocity.add("custom-input-rules"      , packetService.getCustomRules(host, ChainType.INPUT));
+        velocity.add("custom-output-rules"     , packetService.getCustomRules(host, ChainType.OUTPUT));
+        velocity.add("custom-forward-rules"    , packetService.getCustomRules(host, ChainType.FORWARD));
+        velocity.add("custom-prerouting-rules" , packetService.getCustomRules(host, ChainType.PREROUTING));
+        velocity.add("custom-postrouting-rules", packetService.getCustomRules(host, ChainType.POSTROUTING));
 
         PrintWriter out = new PrintWriter(new FileWriter(new File(aDir, host)));
         try {

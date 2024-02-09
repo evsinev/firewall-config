@@ -1,6 +1,8 @@
 package com.payneteasy.firewall.service;
 
+import com.payneteasy.firewall.dao.model.ChainType;
 import com.payneteasy.firewall.dao.model.TBlockedIpAddress;
+import com.payneteasy.firewall.dao.model.TCustomRule;
 import com.payneteasy.firewall.service.model.*;
 
 import java.util.List;
@@ -24,4 +26,6 @@ public interface IPacketService {
     List<LinkedVrrpPacket> getLinkedVrrpPackets(String aHostname);
 
     List<TBlockedIpAddress> getBlockedIpAddresses(String aHostname);
+
+    List<TCustomRule> getCustomRules(String aHost, ChainType aChainType);
 }

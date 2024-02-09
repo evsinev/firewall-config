@@ -64,6 +64,13 @@
 -A INPUT --protocol icmp --icmp-type echo-request             -j ACCEPT
 -A INPUT --protocol icmp --icmp-type time-exceeded            -j ACCEPT
 
+#if ( $custom-input-rules.size() > 0 )
+# Custom INPUT Rules
+#foreach( $rule in $custom-input-rules )
+# $rule.description / $rule.justification
+$rule.rule
+#end
+#end
 
 #
 # OUTPUT packets
@@ -85,6 +92,13 @@
 -A OUTPUT --protocol icmp --icmp-type echo-request             -j ACCEPT
 -A OUTPUT --protocol icmp --icmp-type time-exceeded            -j ACCEPT
 
+#if ( $custom-output-rules.size() > 0 )
+# Custom OUTPUT Rules
+#foreach( $rule in $custom-output-rules )
+# $rule.description / $rule.justification
+$rule.rule
+#end
+#end
 #
 # FORWARD packets 2
 #
@@ -115,6 +129,14 @@
 -A FORWARD --protocol icmp --icmp-type destination-unreachable  -j ACCEPT
 -A FORWARD --protocol icmp --icmp-type echo-request             -j ACCEPT
 -A FORWARD --protocol icmp --icmp-type time-exceeded            -j ACCEPT
+#end
+#if ( $custom-output-rules.size() > 0 )
+
+# Custom FORWARD Rules
+#foreach( $rule in $custom-forward-rules )
+# $rule.description / $rule.justification
+$rule.rule
+#end
 #end
 
 # for tcp --reject-with tcp-reset
@@ -157,6 +179,21 @@ COMMIT
 -A PREROUTING -d $p.destination_nat_address -p $p.protocol -j DNAT --to-destination $p.destination_address
 #end
 
+#end
+#end
+#if ( $custom-prerouting-rules.size() > 0 )
+# Custom PREROUTING Rules
+#foreach( $rule in $custom-prerouting-rules )
+# $rule.description / $rule.justification
+$rule.rule
+#end
+#end
+#if ( $custom-postrouting-rules.size() > 0 )
+
+# Custom POSTROUTING Rules
+#foreach( $rule in $custom-postrouting-rules )
+# $rule.description / $rule.justification
+$rule.rule
 #end
 #end
 
