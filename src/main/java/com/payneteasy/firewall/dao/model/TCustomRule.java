@@ -21,4 +21,14 @@ public class TCustomRule {
     public String getJustification() {
         return justification;
     }
+
+    @Override
+    public String toString() {
+        return "TCustomRule{" +
+                "chain=" + chain +
+                ", rule='" + rule + '\'' +
+                ", description='" + description + '\'' +
+                ", justification='" + justification + '\'' +
+                '}';
+    }
 }

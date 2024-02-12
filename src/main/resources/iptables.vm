@@ -130,7 +130,7 @@ $rule.rule
 -A FORWARD --protocol icmp --icmp-type echo-request             -j ACCEPT
 -A FORWARD --protocol icmp --icmp-type time-exceeded            -j ACCEPT
 #end
-#if ( $custom-output-rules.size() > 0 )
+#if ( $custom-forward-rules.size() > 0 )
 
 # Custom FORWARD Rules
 #foreach( $rule in $custom-forward-rules )

@@ -560,6 +560,12 @@ public class PacketServiceImpl implements IPacketService {
         }
 
         return host.customRules.stream()
+                .filter(it -> {
+                    if(it.chain == null) {
+                        throw new IllegalStateException("No chain type for host " + aHostname + " and custom rule " + it);
+                    }
+                    return true;
+                })
                 .filter(it -> it.chain == aChainType)
                 .collect(Collectors.toList());
     }
