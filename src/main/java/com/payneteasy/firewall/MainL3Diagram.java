@@ -2,23 +2,39 @@ package com.payneteasy.firewall;
 
 import com.payneteasy.firewall.dao.ConfigDaoYaml;
 import com.payneteasy.firewall.dao.IConfigDao;
-import com.payneteasy.firewall.dao.model.THost;
 import com.payneteasy.firewall.l3.CreateL3Diagram;
+import com.payneteasy.firewall.shell.AbstractDirPrefixFilterCommand;
+import picocli.CommandLine;
 
-import java.io.File;
 import java.io.IOException;
 
-public class MainL3Diagram {
+@CommandLine.Command(
+        name = "MainL3Diagram"
+        , mixinStandardHelpOptions = true
+        , description = "Generate L3 image"
+)
+public class MainL3Diagram extends AbstractDirPrefixFilterCommand {
 
-    public static void main(String[] args) throws IOException {
-        File configDir = new File(args[0]);
-        if(!configDir.exists()) throw new IllegalStateException("Config dir "+configDir.getAbsolutePath()+" is not exists");
+    @CommandLine.Option(names = {"--run-nwdiag"}, description = "Run nwdiag")
+    private boolean runNwdiag = true;
 
-        IConfigDao configDao = new ConfigDaoYaml(configDir);
+    @Override
+    public Integer call() throws Exception {
 
-        CreateL3Diagram creator = new CreateL3Diagram(configDir);
+        IConfigDao configDao = new ConfigDaoYaml(dir);
+
+        CreateL3Diagram creator = new CreateL3Diagram(dir, runNwdiag, getFilterArray());
         creator.create(configDao);
 
+        return 0;
+    }
+
+    public static void main(String[] args) throws IOException {
+        System.exit(
+                new CommandLine(
+                        new MainL3Diagram()
+                ).execute(args)
+        );
     }
 
 }

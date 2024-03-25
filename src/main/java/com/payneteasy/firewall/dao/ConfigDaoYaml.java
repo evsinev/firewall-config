@@ -29,6 +29,10 @@ import static java.lang.String.format;
 public class ConfigDaoYaml implements IConfigDao {
 
     public ConfigDaoYaml(File aDir) throws IOException {
+        if(!aDir.exists()) {
+            throw new IllegalStateException("Config dir " + aDir.getAbsolutePath() + " is not exists");
+        }
+
         final DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setPrettyFlow(true);
         theYaml = new Yaml(dumperOptions);

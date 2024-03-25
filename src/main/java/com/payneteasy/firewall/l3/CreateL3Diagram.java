@@ -16,60 +16,77 @@ import java.util.*;
 
 public class CreateL3Diagram {
 
-    private final File configDir;
+    private final File     configDir;
+    private final boolean  runNwdiag;
+    private final String[] filter;
 
-    public CreateL3Diagram(File configDir) {
+    public CreateL3Diagram(File configDir, boolean runNwdiag, String[] filter) {
         this.configDir = configDir;
+        this.runNwdiag = runNwdiag;
+        this.filter    = filter;
     }
 
     public void create(IConfigDao aConfigDao) {
 
-        Map<String, List<THost>> map = createNetworks(aConfigDao);
-        List<Network> nets = convertToNetWorks(map, aConfigDao);
-        printNetwork(nets);
+        printNetwork(
+            sortNetworks(
+                convertToNetworks(
+                          createNetworkHosts(aConfigDao)
+                        , aConfigDao.listNetworksNames()
+                )
+            )
+        );
+
     }
 
-    private List<Network> convertToNetWorks(Map<String, List<THost>> map, IConfigDao aConfigDao) {
-
-        Map<String, String> names = aConfigDao.listNetworksNames();
+    private List<Network> convertToNetworks(Map<String, List<THost>> aNetworkHosts, Map<String, String> aNetworkNames) {
 
         List<Network> nets = new ArrayList<>();
-        for (Map.Entry<String, List<THost>> entry : map.entrySet()) {
-            Network net = new Network();
-            net.address = entry.getKey();
-            net.name = names.get(entry.getKey());
-            net.hosts = convertToHosts(net.address, entry.getValue());
-            if(net.name == null) {
-                throw new IllegalStateException("Network  "+entry.getKey()+" has no name, please add it to networks.yml file");
+        for (Map.Entry<String, List<THost>> entry : aNetworkHosts.entrySet()) {
+
+            String networkName = aNetworkNames.get(entry.getKey());
+
+            if (networkName == null) {
+                throw new IllegalStateException("Network  " + entry.getKey() + " has no name, please add it to networks.yml file");
             }
 
-            if(net.name.startsWith("skip")) {
+            if(networkName.startsWith("skip")) {
                 continue;
             }
+
+            Network net = new Network();
+
+            net.address = entry.getKey();
+            net.name    = networkName;
+            net.hosts   = convertToHosts(net.address, entry.getValue());
+
             nets.add(net);
         }
 
-        Collections.sort(nets, (left, right) -> {
+        return nets;
+    }
 
-            if("internet".equals(left.name)) {
+    private static List<Network> sortNetworks(List<Network> nets) {
+        nets.sort((left, right) -> {
+
+            if ("internet".equals(left.name)) {
                 return -1;
             }
 
-            if("internet".equals(right.name)) {
+            if ("internet".equals(right.name)) {
                 return 1;
             }
 
-            if(left.name == null) {
-                throw new IllegalStateException("Left name is null for "+ left);
+            if (left.name == null) {
+                throw new IllegalStateException("Left name is null for " + left);
             }
 
-            if(right.name == null) {
+            if (right.name == null) {
                 throw new IllegalStateException("Right name is null for " + right);
             }
 
             return left.name.compareTo(right.name);
         });
-//        sortNetworks(nets);
 
         return nets;
     }
@@ -96,8 +113,10 @@ public class CreateL3Diagram {
 
     private boolean isInNetwork(TInterface aInterface, String aNetworkAddress) {
         for (String ip : aInterface.getAllIpAddresses()) {
+
             int left = ip.lastIndexOf('.');
             int right = aNetworkAddress.lastIndexOf('.');
+
 
             if(ip.substring(0, left).equals(aNetworkAddress.substring(0, right))) {
                 return true;
@@ -118,30 +137,32 @@ public class CreateL3Diagram {
             mustache.execute(new PrintWriter(System.out), scope).flush();
             mustache.execute(new FileWriter("target/network.diag"), scope).flush();
 
-            System.out.println("nwdiag is generating png ...");
-            new CommandProcess("nwdiag", "nwdiag -a --no-transparency target/network.diag").waitSuccess();
+            if(runNwdiag) {
+                System.out.println("nwdiag is generating png ...");
+                new CommandProcess("nwdiag", "nwdiag -a --no-transparency target/network.diag").waitSuccess();
 
-            System.out.println("Opening file ...");
-            new CommandProcess("open", "open target/network.png").waitSuccess();
+                System.out.println("Opening file ...");
+                new CommandProcess("open", "open target/network.png").waitSuccess();
+            }
 
         } catch (Exception e) {
             throw new IllegalStateException("Could not write file", e);
         }
     }
 
-    private Map<String, List<THost>> createNetworks(IConfigDao aConfigDao) {
-        Map<String, List<THost>> networks = new HashMap<>();
+    private Map<String, List<THost>> createNetworkHosts(IConfigDao aConfigDao) {
+        Map<String, List<THost>> networkHosts = new HashMap<>();
 
-        for (THost host : aConfigDao.listHostsByFilter("internal", "ipmi")) {
+        for (THost host : aConfigDao.listHostsByFilter(filter)) {
             for (TInterface iface : host.interfaces) {
                 if (iface.ip != null && !"skip".equals(iface.ip)) {
                     String network = getNetwork(iface.ip);
-                    addHostToNetwork(networks, network, host);
+                    addHostToNetwork(networkHosts, network, host);
                 }
             }
         }
 
-        return networks;
+        return networkHosts;
     }
 
     private void addHostToNetwork(Map<String, List<THost>> aNetworks, String aNetwork, THost aHost) {
