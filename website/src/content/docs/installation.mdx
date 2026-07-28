@@ -1,0 +1,129 @@
+---
+title: Installation
+description: Build the fat jar, check the prerequisites, and understand how the tool is released into a config repository.
+---
+
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+## Prerequisites
+
+| | |
+|---|---|
+| **Java 8** | The project compiles with `source`/`target` `1.8`. It runs on newer JREs, but do not raise the compiler level without checking — see [Limitations](/firewall-config/internals/limitations/). |
+| **Maven** | Not needed separately; use the bundled `./mvnw` wrapper (Maven 3.5.2). |
+| **`nwdiag`** | Only to render the [L3 diagram](/firewall-config/generators/l3-diagram/) to PNG/SVG. The generator itself only writes `network.diag`. Install with `apt install python3-nwdiag` (the binary is then `nwdiag3`). |
+| **A desktop session** | Only for the interactive [L2 editor](/firewall-config/generators/l2-diagram/). The SVG and PNG variants run headless. |
+
+Dependencies resolve from Maven Central plus `https://maven.pne.io`, which is declared in `pom.xml`
+and publicly readable.
+
+## Build
+
+<Steps>
+
+1. Build the fat jar. The assembly plugin is not bound to a lifecycle phase, so `assembly:single`
+   has to be named explicitly:
+
+   ```sh
+   ./mvnw clean package assembly:single
+   ```
+
+2. Two jars land in `target/`. The one you want is the shaded one:
+
+   ```
+   target/config-1.1-SNAPSHOT-jar-with-dependencies.jar     # ~6 MB, everything included
+   target/config-1.1-SNAPSHOT.jar                           # classes only, not runnable
+   ```
+
+3. Check it runs:
+
+   ```sh
+   cd examples/demo-network && mkdir -p gen
+   java -jar ../../target/config-1.1-SNAPSHOT-jar-with-dependencies.jar . group-internal gen
+   ```
+
+</Steps>
+
+`./mvnw clean install` (without `assembly:single`) runs the unit tests but produces no runnable jar.
+
+## How it is released
+
+There is no published CLI artifact. The convention is that **each network description repository
+carries the jar it was generated with**, copied in as `firewall-config.jar` next to a few shell
+wrappers:
+
+```
+firewall-<site>/            # the network description repo
+├── hosts/ protocols.yml networks.yml …
+├── firewall-config.jar     # copied from target/, committed
+├── firewall-config.sh
+├── firewall-l3.sh
+└── firewall-l2-svg.sh
+```
+
+This makes every generated rule set reproducible from that repository alone, at the cost of
+committing a binary. Upgrading the tool is a deliberate act: rebuild, copy the jar in, re-run
+everything, and review the diff of the generated output.
+
+Typical wrappers:
+
+<Tabs>
+<TabItem label="iptables">
+
+```bash title="firewall-config.sh"
+#!/usr/bin/env bash
+set -eux
+java -jar firewall-config.jar . group-internal ../ansible-<site>/roles/iptables/files/gen
+java -jar firewall-config.jar . fw-ipmi-1      ../ansible-<site>/roles/iptables/files/gen
+```
+
+</TabItem>
+<TabItem label="L3 diagram">
+
+```bash title="firewall-l3.sh"
+#!/usr/bin/env bash
+set -eux
+mkdir -p target
+java -cp firewall-config.jar com.payneteasy.firewall.MainL3Diagram \
+     --filter internal,ipmi,internet . current
+cd target && nwdiag3 -a -T svg network.diag
+```
+
+</TabItem>
+<TabItem label="L2 diagram">
+
+```bash title="firewall-l2-svg.sh"
+#!/usr/bin/env bash
+set -eux
+java -cp firewall-config.jar com.payneteasy.firewall.MainL2SvgDiagram \
+     --filter internal,ipmi,internet . current
+cp current-l2.svg images/l2.svg
+```
+
+</TabItem>
+</Tabs>
+
+## Running it in CI
+
+The description repository is the natural place for the pipeline: on every push, regenerate
+everything and fail if a generator rejects the configuration. A JDK 8 image with `nwdiag`
+pre-installed (for example `payneteasy/jdk-8-nwdiag:2`) covers all of it.
+
+```yaml title=".gitlab-ci.yml in the description repo"
+test:
+  image: payneteasy/jdk-8-nwdiag:2
+  script:
+    - mkdir -p target gen
+    - ./firewall-config.sh
+    - ./firewall-l3.sh
+    - ./firewall-l2-svg.sh
+```
+
+Because most misconfigurations are hard errors rather than warnings — an unknown protocol, a subnet
+missing from `networks.yml`, a `vip` with no VRRP peer, a NAT direction that cannot be resolved —
+this doubles as validation of the description itself.
+
+## Next
+
+- [Quick start](/firewall-config/quick-start/) — run every generator against the bundled demo network.
+- [Configuration directory](/firewall-config/configuration/config-directory/) — start a description from scratch.

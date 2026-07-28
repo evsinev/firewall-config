@@ -1,0 +1,13 @@
+#
+# Human-readable name for every /24 that appears on an interface in hosts/.
+#
+# Used by the L3 diagram. A /24 that is used but missing here is a hard error. A name starting
+# with `skip` excludes the network from the diagram.
+#
+networks: {
+  198.51.100.0 : internet,
+  10.20.2.0    : dmz,
+  10.20.20.0   : app,
+  10.20.22.0   : db,
+  10.20.6.0    : ipmi
+}

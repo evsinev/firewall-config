@@ -1,0 +1,201 @@
+---
+title: Quick start
+description: Run every generator against the bundled demo network and read the output.
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+The repository ships a complete, fictional network description at
+[`examples/demo-network`](https://github.com/evsinev/firewall-config/tree/master/examples/demo-network).
+Every snippet on this site comes from it, so running it is the fastest way to see what the tool
+produces. All addresses are from the documentation ranges reserved by RFC 5737 and RFC 1918.
+
+## The demo network
+
+```
+                        internet 198.51.100.0/24
+                                  |
+                     +------------+------------+
+                     |                         |
+              198.51.100.11             198.51.100.12
+                   fw-1  ==== VRRP ====  fw-2          partner-api.example.com
+                     |                         |            198.51.100.50
+       +---------+---+-------+--------+--------+
+       |         |           |        |
+   dmz .2.0   app .20.0   db .22.0   ipmi .6.0        (all 10.20.x.0/24)
+       |         |           |        |
+   proxy-1    web-1       db-1    sw-core-1
+              adm-1
+```
+
+| Group      | Host                      | Role |
+|------------|---------------------------|------|
+| `internal` | `fw-1`, `fw-2`            | VRRP pair of perimeter firewalls, five VLANs each |
+| `internal` | `proxy-1`                 | DMZ egress proxy and internal resolver |
+| `internal` | `web-1`                   | Public web application |
+| `internal` | `db-1`                    | PostgreSQL server |
+| `internal` | `adm-1`                   | Jump host, Prometheus, owner of the shared service definitions |
+| `ipmi`     | `sw-core-1`               | Core switch — the only place cabling is described |
+| `external` | `partner-api.example.com` | Third-party peer on a public address |
+
+## Generate everything
+
+<Steps>
+
+1. Build the jar as described in [Installation](/firewall-config/installation/), then work from the
+   demo directory:
+
+   ```sh
+   cd examples/demo-network
+   JAR=../../target/config-1.1-SNAPSHOT-jar-with-dependencies.jar
+   mkdir -p gen target
+   ```
+
+2. **iptables** — one file per host in `hosts/internal/`:
+
+   ```sh
+   java -jar $JAR . group-internal gen
+   ```
+
+   ```
+   ......
+   $ ls gen
+   adm-1  db-1  fw-1  fw-2  proxy-1  web-1
+   ```
+
+3. **L3 diagram** source. Drop `--run-nwdiag=false` if `nwdiag` is installed and you want the
+   picture rendered and opened:
+
+   ```sh
+   java -cp $JAR com.payneteasy.firewall.MainL3Diagram \
+        --run-nwdiag=false --filter internal,ipmi . current
+   ```
+
+4. **L2 diagram** as SVG:
+
+   ```sh
+   java -cp $JAR com.payneteasy.firewall.MainL2SvgDiagram --filter internal,ipmi . current
+   ```
+
+   ```
+   Wrote to file …/examples/demo-network/current-l2.svg
+   ```
+
+5. **Wiki pages.** `MainWiki` normally pushes to Redmine; give it a path instead of a URL and it
+   writes the pages as files, which is ideal for a first look:
+
+   ```sh
+   mkdir -p wiki-out
+   java -cp $JAR com.payneteasy.firewall.MainWiki ./wiki-out dummy-key .
+   ```
+
+6. **BIND zones**, **keepalived** and **switch VLANs**:
+
+   ```sh
+   mkdir -p bind-out
+   java -cp $JAR com.payneteasy.firewall.MainBind . demo.example.com bind-out
+   java -cp $JAR com.payneteasy.firewall.MainKeepalived . fw-1
+   java -cp $JAR com.payneteasy.firewall.MainMikrotik . sw-core-1
+   ```
+
+</Steps>
+
+<Aside type="note">
+Output directories must already exist — no generator creates them. `MainL3Diagram` in particular
+writes to the fixed path `target/network.diag` relative to the current directory.
+</Aside>
+
+## Read the output
+
+### A derived FORWARD + NAT pair
+
+Nothing in the description mentions `fw-1` in connection with the partner API. It is the firewall
+between the DMZ and the internet, `partner-api.example.com` has a public address, and `proxy-1` is
+in its `access:` list — so `gen/fw-1` gets the forwarding rules and the source translation:
+
+```sh title="gen/fw-1"
+# proxy-1 -> https://partner-api.example.com   * --> partner-api
+-A FORWARD -s 10.20.2.21 -d 198.51.100.50 -i eth0.201 -o eth0.100 -p tcp -m tcp --dport 443 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s 198.51.100.50 -d 10.20.2.21 -i eth0.100 -o eth0.201 -p tcp -m tcp --sport 443 -m state --state RELATED,ESTABLISHED -j ACCEPT
+```
+
+```sh title="gen/fw-1, *nat table"
+# proxy-1 -> https://partner-api.example.com    * --> partner-api
+-A POSTROUTING -s 10.20.2.21  -d 198.51.100.50 -p tcp  --dport 443 -o eth0.100 -j SNAT --to-source 198.51.100.10
+
+# partner-api.example.com -> https://web-1     * --> web-app
+-A PREROUTING -d 198.51.100.10 -p tcp -m tcp --dport 443 -j DNAT --to-destination 10.20.20.21:443
+```
+
+The direction was not declared anywhere. SNAT because the *destination* is public; DNAT because the
+*source* is public. See [Rule derivation](/firewall-config/internals/packet-derivation/).
+
+### Access lists that follow the application
+
+`db-1` grants access to `web-app.service` rather than to an address, so the rule names the host that
+currently runs it:
+
+```sh title="gen/db-1"
+# web-1:web-app -> postgres:main-db
+-A INPUT  -i eth0 -p tcp -m tcp -s 10.20.20.21 --dport 5432 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -o eth0 -p tcp -m tcp -d 10.20.20.21 --sport 5432 -m state --state RELATED,ESTABLISHED -j ACCEPT
+```
+
+### Rules that were *not* generated
+
+`proxy-1` publishes its resolver to `group-internal`, which includes both firewalls. `fw-1` still
+gets no FORWARD rule for `fw-2 → proxy-1`, because the two share every virtual address and neither
+routes for the other. Similarly there is no FORWARD rule for `web-1 → adm-1`: they are in the same
+/24 and never traverse the firewall. Six independent suppression rules do this filtering — they are
+listed under [Rule derivation](/firewall-config/internals/packet-derivation/#which-forward-packets-are-suppressed).
+
+### The L3 diagram
+
+```text title="target/network.diag"
+nwdiag {
+
+    group {
+        color = "#FFCDD2";
+        fw-1;
+        fw-2;
+    }
+
+    network "internet" {
+        address = "198.51.100.0/24";
+
+            fw-2 [address = "198.51.100.12"];
+            fw-1 [address = "198.51.100.11"];
+    }
+    network "app" {
+        address = "10.20.20.0/24";
+
+            adm-1 [address = "10.20.20.31"];
+            web-1 [address = "10.20.20.21"];
+            fw-2 [address = "10.20.20.12"];
+            fw-1 [address = "10.20.20.11"];
+    }
+    …
+}
+```
+
+The `group { … }` block came verbatim from `nwdiag-custom.diag`; everything else is derived from the
+interface addresses and named from `networks.yml`.
+
+### The audit pages
+
+```txt title="wiki-out/db-1_packets.wiki"
+h2. Services and input packets
+
+|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|
+|ssh:ssh|eth0|10.20.22.21|22|[[adm-1 details|adm-1]] |Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|postgres:main-db|eth0|10.20.22.21|5432|[[adm-1 details|adm-1]] [[web-1 details|web-1:web-app]] |Primary PostgreSQL cluster|The web application stores transaction data here|
+```
+
+Same facts as the rule set, addressed at an auditor instead of a kernel — which is the point of
+requiring `description` and `justification` on every service.
+
+## Next
+
+- [Configuration directory](/firewall-config/configuration/config-directory/) — start your own description.
+- [Services and access](/firewall-config/configuration/services/) — the `url:`, `access:` and `nat:` languages.
+- [CLI reference](/firewall-config/reference/cli/) — every entry point and its arguments.

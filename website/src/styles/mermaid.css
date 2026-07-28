@@ -1,0 +1,59 @@
+/*
+ * Client-side mermaid loading polish (no build changes).
+ *
+ * astro-mermaid ships the diagram SOURCE (`<pre class="mermaid">graph TD…`) and swaps in the SVG
+ * only after its client script runs. astro-mermaid's own loading skeleton is injected from that
+ * script (after first paint), so without help the box is blank until render and then the SVG pops
+ * in. These rules ship in the page <head> at build time (Starlight customCss), so they apply on
+ * first paint: hide the source, show a theme-aware shimmer skeleton immediately, then fade the
+ * finished SVG in. Once rendered, astro-mermaid sets `data-processed` and the loading rules stop
+ * matching.
+ */
+
+/* Loading state — never a blank box; a shimmer skeleton from the very first paint. */
+pre.mermaid:not([data-processed]) {
+  color: transparent; /* hide the raw mermaid source */
+  min-height: 220px; /* reserve space to minimize layout shift */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  /* !important so this theme-aware skeleton wins over astro-mermaid's late, hard-coded one
+     (avoids a mid-load color swap). Starlight gray tokens adapt to light/dark. */
+  background: linear-gradient(
+    90deg,
+    var(--sl-color-gray-6, #f0f0f0) 25%,
+    var(--sl-color-gray-5, #e0e0e0) 50%,
+    var(--sl-color-gray-6, #f0f0f0) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: mermaid-shimmer 1.5s ease-in-out infinite !important;
+}
+
+@keyframes mermaid-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Rendered state — reveal the SVG with a gentle fade instead of an abrupt pop. */
+pre.mermaid[data-processed] {
+  color: inherit;
+}
+
+pre.mermaid[data-processed] svg {
+  animation: mermaid-fade-in 0.3s ease-in;
+}
+
+@keyframes mermaid-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

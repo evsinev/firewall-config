@@ -1,0 +1,75 @@
+description:   Core switch
+justification: L2 switching for all VLANs
+color:         "0xCFD8DC"
+
+gw: 10.20.6.1
+
+# The switch is the single place where cabling is described: `port` is the physical port,
+# `link` is the far end as <host>/<interface>, `vlan` is the port's VLAN (or `trunk`).
+# Declare each cable on one side only.
+interfaces:
+
+- name: vlan-mgmt
+  ip:   10.20.6.2
+
+- name: ether1
+  ip:   skip
+  port: 1
+  link: fw-1/eth0
+  vlan: trunk
+
+- name: ether2
+  ip:   skip
+  port: 2
+  link: fw-2/eth0
+  vlan: trunk
+
+- name: ether3
+  ip:   skip
+  port: 3
+  link: proxy-1/eth0
+  vlan: 201
+
+- name: ether4
+  ip:   skip
+  port: 4
+  link: proxy-1/ipmi
+  vlan: 206
+
+- name: ether5
+  ip:   skip
+  port: 5
+  link: web-1/eth0
+  vlan: 202
+
+- name: ether6
+  ip:   skip
+  port: 6
+  link: web-1/ipmi
+  vlan: 206
+
+- name: ether7
+  ip:   skip
+  port: 7
+  link: adm-1/eth0
+  vlan: 202
+
+- name: ether8
+  ip:   skip
+  port: 8
+  link: adm-1/ipmi
+  vlan: 206
+
+- name: ether9
+  ip:   skip
+  port: 9
+  link: db-1/eth0
+  vlan: 203
+
+- name: ether10
+  ip:   skip
+  port: 10
+  link: db-1/ipmi
+  vlan: 206
+
+services_links: ssh

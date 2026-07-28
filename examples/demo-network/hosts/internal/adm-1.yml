@@ -1,0 +1,35 @@
+description:   Administrative jump host and monitoring server
+justification: Single controlled entry point for administration; runs Prometheus
+color:         "0xB2DFDB"
+
+gw: 10.20.20.1
+
+interfaces:
+
+- name: eth0
+  ip:   10.20.20.31
+
+- name: ipmi
+  ip:   skip
+
+# This host declares the two service definitions that every other host reuses through
+# `services_links`. A definition is owned by exactly one host and referenced by its `name`.
+services:
+
+- url:           ssh
+  name:          ssh
+  description:   Administrative SSH access
+  justification: PCI DSS 2.3 - all administrative access is encrypted
+  access:        [adm-*]
+
+- url:           node-exporter
+  name:          node-exporter
+  description:   Prometheus node metrics endpoint
+  justification: Capacity and availability monitoring
+  access:        [adm-1]
+
+- url:           prometheus
+  name:          prometheus-ui
+  description:   Prometheus web UI
+  justification: Operators read dashboards and acknowledge alerts
+  access:        [adm-*]

@@ -1,0 +1,30 @@
+description:   DMZ egress proxy and internal resolver
+justification: The only host allowed to open connections towards the internet
+color:         "0xFFE0B2"
+
+gw: 10.20.2.1
+
+interfaces:
+
+- name: eth0
+  ip:   10.20.2.21
+
+- name: ipmi
+  ip:   skip
+
+services_links: ssh, node-exporter
+
+services:
+
+- url:           proxy
+  name:          egress-proxy
+  description:   Forward proxy for outgoing HTTPS callbacks
+  justification: Applications must not reach the internet directly
+  access:        [web-app.service, adm-1]
+
+# `group-internal` expands to every host under hosts/internal/.
+- url:           dns
+  name:          internal-dns
+  description:   Recursive resolver for the whole estate
+  justification: Name resolution without exposing internal names outside
+  access:        [group-internal]

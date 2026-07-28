@@ -1,0 +1,71 @@
+#
+# Catalogue of application protocols.
+#
+# Every `url:` and `nat:` in a host file refers to a protocol by `name`. The port here is the
+# default; a host may override it inline (`url: http 3128`). `program`, `description` and
+# `justification` are inherited by every service that does not set its own.
+#
+protocols:
+
+- name:          ssh
+  protocol:      tcp
+  port:          22
+  program:       sshd
+  description:   Secure Shell
+  justification: Encrypted administrative access
+
+- name:          http
+  protocol:      tcp
+  port:          80
+  program:       nginx
+  description:   HTTP
+  justification: Web access
+
+- name:          https
+  protocol:      tcp
+  port:          443
+  program:       nginx
+  description:   HTTP over TLS
+  justification: Encrypted web access
+
+- name:          dns
+  protocol:      udp
+  port:          53
+  program:       unbound
+  description:   Domain Name System
+  justification: Name resolution for internal hosts
+
+- name:          ntp
+  protocol:      udp
+  port:          123
+  program:       chronyd
+  description:   Network Time Protocol
+  justification: Clock synchronisation across the estate
+
+- name:          postgres
+  protocol:      tcp
+  port:          5432
+  program:       postgres
+  description:   PostgreSQL wire protocol
+  justification: Application access to the database
+
+- name:          node-exporter
+  protocol:      tcp
+  port:          9100
+  program:       node_exporter
+  description:   Prometheus node metrics
+  justification: Capacity and availability monitoring
+
+- name:          prometheus
+  protocol:      tcp
+  port:          9090
+  program:       prometheus
+  description:   Prometheus web UI and API
+  justification: Operators read dashboards and alerts
+
+- name:          proxy
+  protocol:      tcp
+  port:          3128
+  program:       squid
+  description:   Forward HTTP proxy
+  justification: Single controlled egress point to the internet

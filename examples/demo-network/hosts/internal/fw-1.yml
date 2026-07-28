@@ -1,0 +1,64 @@
+description:   Perimeter firewall, master
+justification: Controls all traffic between the internet, the DMZ and the internal networks
+color:         "0xEF9A9A"
+
+# The upstream ISP router. It is not described as a host, so nothing is routed *through* it.
+gw: 198.51.100.1
+
+interfaces:
+
+# Physical trunk to the core switch. All VLANs below are stacked on top of it, so it carries
+# no address of its own.
+- name: eth0
+  ip:   skip
+
+# The app VLAN is listed first, so it provides the host's default IP: management services
+# inherited via services_links bind here rather than on the public address.
+- name: eth0.202
+  ip:   10.20.20.11
+  vip:  10.20.20.1
+  vlan: 202
+
+- name: eth0.201
+  ip:   10.20.2.11
+  vip:  10.20.2.1
+  vlan: 201
+
+- name: eth0.203
+  ip:   10.20.22.11
+  vip:  10.20.22.1
+  vlan: 203
+
+- name: eth0.206
+  ip:   10.20.6.11
+  vip:  10.20.6.1
+  vlan: 206
+
+- name: eth0.100
+  ip:   198.51.100.11
+  vlan: 100
+  vips:
+  - ip:    198.51.100.10
+    names: gw.demo.example.com
+
+services_links: ssh, node-exporter
+
+blockedIpAddresses:
+- ip:     203.0.113.66
+  reason: Repeated credential stuffing against the web application
+  type:   DROP
+
+- ip:     203.0.113.90
+  reason: Scanner, reported by the upstream provider
+  type:   REJECT
+
+customRules:
+- chain:         INPUT
+  rule:          -A INPUT -p udp -m udp --dport 33434:33534 -m limit --limit 5/min -j ACCEPT
+  description:   Rate-limited traceroute probes
+  justification: Network troubleshooting from the NOC; not expressible as a service
+
+- chain:         POSTROUTING
+  rule:          -A POSTROUTING -s 10.20.6.0/24 -o eth0.100 -j SNAT --to-source 198.51.100.10
+  description:   Egress for the out-of-band management network
+  justification: IPMI controllers need NTP and vendor firmware updates

@@ -8,3 +8,12 @@ target
 /firewall-holland
 /firewall-moscow
 .DS_Store
+
+# generated output of examples/demo-network
+/examples/demo-network/gen/
+/examples/demo-network/wiki-out/
+/examples/demo-network/bind-out/
+/examples/demo-network/pages_history.yml
+/examples/demo-network/current-l2.svg
+/examples/demo-network/current-l2.png
+/examples/demo-network/current-l2-positions.properties
