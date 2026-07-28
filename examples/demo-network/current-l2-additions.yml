@@ -1,0 +1,23 @@
+#
+# Extra input for the L2 commands only. The file name is <prefix>-l2-additions.yml, where
+# <prefix> is the second positional argument of the L2 commands ("current" here).
+#
+
+# Colour per VLAN, applied to ports and cables in the diagram and on the printed labels.
+vlanColors: {
+
+    trunk: 0xEF9A9A,
+
+    100:   0xFFCC80,
+    201:   0xFFF59D,
+    202:   0xA5D6A7,
+    203:   0x90CAF9,
+    206:   0xE1BEE7
+}
+
+# Cables that exist but are not (or cannot be) described in hosts/ — for example a link to
+# equipment that has no host file, or a temporary patch.
+addedLinks: []
+
+# Cables described in hosts/ that should not be drawn.
+removedLinks: []

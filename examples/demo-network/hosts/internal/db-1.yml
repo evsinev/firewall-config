@@ -1,0 +1,25 @@
+description:   Primary PostgreSQL server
+justification: Stores customer and transaction data
+color:         "0xB2DFDB"
+
+gw: 10.20.22.1
+
+interfaces:
+
+- name: eth0
+  ip:   10.20.22.21
+
+- name: ipmi
+  ip:   skip
+
+services_links: ssh, node-exporter
+
+services:
+
+# `web-app.service` means "every host that declares a service named web-app" — the access list
+# follows the application, not a hard-coded address.
+- url:           postgres
+  name:          main-db
+  description:   Primary PostgreSQL cluster
+  justification: The web application stores transaction data here
+  access:        [web-app.service, adm-1]

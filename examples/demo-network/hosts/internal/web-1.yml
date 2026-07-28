@@ -1,0 +1,29 @@
+description:   Customer-facing web application
+justification: Primary business service
+color:         "0xB2DFDB"
+
+gw: 10.20.20.1
+
+interfaces:
+
+- name: eth0
+  ip:   10.20.20.21
+
+# L2 only: the port exists in the diagrams and in the switch configuration, but has no address.
+- name: ipmi
+  ip:   skip
+
+services_links: ssh, node-exporter
+
+services:
+
+# Reachable from the internet: the source host is public, so the generator emits a DNAT rule on
+# the firewall using the `nat:` address, plus the matching FORWARD rules.
+- url:           https
+  name:          web-app
+  description:   Customer-facing web application
+  justification: Primary business service
+  nat:           https://gw.demo.example.com
+  tags:          [ingress-nginx]
+  external:      https://www.demo.example.com/
+  access:        [partner-api.example.com, adm-*]

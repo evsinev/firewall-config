@@ -1,0 +1,24 @@
+description:   Partner settlement API
+justification: Outgoing settlement requests and incoming callbacks
+# External peers are described as hosts too — that is how outbound access is granted. Their `gw`
+# is our own external virtual address, which is what makes them "behind" our firewall in the
+# routing graph.
+gw: 198.51.100.10
+
+interfaces:
+- name: eth0
+  ip:   198.51.100.50
+  # Traffic from this peer arrives over a tunnel; clamp the MSS so large responses are not
+  # silently dropped.
+  mss:  1300
+
+services:
+
+# The destination is a public address, so the generator emits a SNAT rule on the firewall: our
+# private source is translated to the `nat:` address.
+- url:           https
+  name:          partner-api
+  description:   Partner settlement API
+  justification: The proxy submits settlement requests on behalf of the application
+  nat:           https://gw.demo.example.com
+  access:        [proxy-1]

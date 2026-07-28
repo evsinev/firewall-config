@@ -1,0 +1,91 @@
+---
+title: firewall-config
+description: Generate iptables rules, L2/L3 network diagrams and audit documentation from a YAML description of your network
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+**firewall-config** turns a YAML description of a network into everything that has to agree with
+it: `iptables` rules for every host, L2 and L3 diagrams, DNS zones, keepalived and switch
+configuration, and the audit documentation that proves the whole thing matches.
+
+The premise is that **no firewall rule is ever written by hand**. You describe hosts, the services
+they listen on, and who may reach them. The generator works out the rest — which chain a packet
+belongs in, which interface it enters and leaves, whether it needs SNAT or DNAT, and which rules are
+redundant because the two hosts already share a subnet.
+
+What it generates:
+
+- **`iptables-save` files**, one per host, with a comment above every rule naming the source, the
+  service and its business justification.
+- **An L3 diagram** — every network and the hosts on it, rendered through
+  [nwdiag](https://github.com/blockdiag/nwdiag).
+- **An L2 diagram** — the physical cabling, coloured per VLAN, with an interactive editor for
+  laying it out and printable cable labels.
+- **Audit documentation** — Redmine wiki pages per host, per group and per service, plus tables of
+  externally reachable services and container hardening results.
+- **Host configuration** — BIND zones, `keepalived.conf`, `ifcfg-*` / `interfaces.d` files and
+  RouterOS VLAN commands.
+
+## Why derive instead of write
+
+A hand-maintained rule set drifts: rules outlive the service they were added for, nobody can say
+why a given `ACCEPT` exists, and the diagram on the wall stops matching reality. Here there is one
+description, and everything else is a build artifact — so a rule cannot exist without a service
+that justifies it, and the diagram cannot disagree with the firewall.
+
+That description is a git repository of its own, separate from this tool. See
+[Configuration directory](/firewall-config/configuration/config-directory/).
+
+## 30-second example
+
+`db-1` says who may talk to PostgreSQL — not by address, but by naming the application:
+
+```yaml title="hosts/internal/db-1.yml"
+gw: 10.20.22.1
+
+interfaces:
+- name: eth0
+  ip:   10.20.22.21
+
+services:
+- url:           postgres
+  name:          main-db
+  description:   Primary PostgreSQL cluster
+  justification: The web application stores transaction data here
+  access:        [web-app.service, adm-1]
+```
+
+```sh
+java -jar firewall-config.jar . group-internal gen
+```
+
+`gen/db-1` now contains, among the rest of the rule set:
+
+```sh
+# web-1:web-app -> postgres:main-db
+-A INPUT  -i eth0 -p tcp -m tcp -s 10.20.20.21 --dport 5432 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A OUTPUT -o eth0 -p tcp -m tcp -d 10.20.20.21 --sport 5432 -m state --state RELATED,ESTABLISHED -j ACCEPT
+```
+
+and `gen/fw-1`, the firewall between the two subnets, got the matching FORWARD pair without being
+mentioned anywhere:
+
+```sh
+# web-1 -> postgres://db-1   web-app --> main-db
+-A FORWARD -s 10.20.20.21 -d 10.20.22.21 -i eth0.202 -o eth0.203 -p tcp -m tcp --dport 5432 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s 10.20.22.21 -d 10.20.20.21 -i eth0.203 -o eth0.202 -p tcp -m tcp --sport 5432 -m state --state RELATED,ESTABLISHED -j ACCEPT
+```
+
+Move the application to another host and both files change on the next run.
+
+## Next steps
+
+<CardGrid>
+	<LinkCard title="Installation" href="/firewall-config/installation/" description="Build the fat jar and check the prerequisites." />
+	<LinkCard title="Quick start" href="/firewall-config/quick-start/" description="Run every generator against the bundled demo network." />
+	<LinkCard title="Configuration directory" href="/firewall-config/configuration/config-directory/" description="How a network description is laid out." />
+	<LinkCard title="Services and access" href="/firewall-config/configuration/services/" description="The url:, access: and nat: mini-languages — the core of the tool." />
+	<LinkCard title="iptables" href="/firewall-config/generators/iptables/" description="The main generator and the structure of what it emits." />
+	<LinkCard title="Rule derivation" href="/firewall-config/internals/packet-derivation/" description="Exactly how a service becomes INPUT, OUTPUT, FORWARD and NAT rules." />
+</CardGrid>
