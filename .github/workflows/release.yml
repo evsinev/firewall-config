@@ -1,0 +1,91 @@
+name: Release
+on:
+  push:
+    # Semver tags only: 1.2.0 matches, the historical 1.1-1 / 1.1-SNAPSHOT tags do not.
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Existing tag to (re)release, e.g. 1.2.0'
+        required: true
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release and upload the jar
+    env:
+      VERSION: ${{ inputs.version || github.ref_name }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.version || github.ref }}
+
+      - uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          java-version: '8'
+          distribution: temurin
+          cache: maven
+
+      # pom.xml stays at 1.1-SNAPSHOT in git; the release version comes from the tag, so that
+      # the jar's embedded META-INF/maven metadata matches what was published.
+      - name: Set the project version from the tag
+        run: |
+          ./mvnw -B -q org.codehaus.mojo:versions-maven-plugin:2.8.1:set \
+                 -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+
+      - name: Build and test
+        run: ./mvnw -B clean package
+
+      # Same sweep as the Build workflow: no release goes out with a generator that cannot
+      # read the demo network.
+      - name: Generate the demo network
+        working-directory: examples/demo-network
+        run: |
+          JAR=../../target/firewall-config.jar
+          mkdir -p gen target wiki-out bind-out
+          java -jar $JAR . group-internal gen
+          java -cp $JAR com.payneteasy.firewall.MainL3Diagram --run-nwdiag=false --filter internal,ipmi . current
+          java -Djava.awt.headless=true -cp $JAR com.payneteasy.firewall.MainL2SvgDiagram --filter internal,ipmi . current
+          java -cp $JAR com.payneteasy.firewall.MainWiki ./wiki-out dummy-key .
+          java -cp $JAR com.payneteasy.firewall.MainBind . demo.example.com bind-out
+          java -cp $JAR com.payneteasy.firewall.MainKeepalived . fw-1
+          java -cp $JAR com.payneteasy.firewall.MainMikrotik . sw-core-1
+
+      - name: Stage the release asset
+        run: cp target/firewall-config.jar "firewall-config-$VERSION.jar"
+
+      # The release body is the matching CHANGELOG.md section. A missing section fails the
+      # build on purpose: the changelog has to be written before the tag is pushed.
+      - name: Collect the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          awk -v version="$VERSION" '
+            $0 == "## [" version "]" || index($0, "## [" version "] ") == 1 { found = 1; next }
+            found && (/^## / || /^\[.*\]: http/) { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+
+          if [ ! -s notes.md ]; then
+            echo "::error file=CHANGELOG.md::No '## [$VERSION]' section found in CHANGELOG.md"
+            exit 1
+          fi
+
+          # Append GitHub's own commit/PR list, collapsed so it does not compete with the
+          # curated notes. Best effort: a failure here must not block the release.
+          if gh api "repos/${{ github.repository }}/releases/generate-notes" \
+                -f tag_name="$VERSION" -q .body > generated.md 2>/dev/null \
+             && [ -s generated.md ]; then
+            {
+              printf '\n<details>\n<summary>All commits</summary>\n\n'
+              cat generated.md
+              printf '\n</details>\n'
+            } >> notes.md
+          fi
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$VERSION" "firewall-config-$VERSION.jar" \
+             --title "$VERSION" --notes-file notes.md --verify-tag

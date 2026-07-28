@@ -136,16 +136,18 @@ prefix they never read. Pass `current`.
   raising the level is plausible, but the Swing/AWT rendering path and the ancient dependency set
   (`snakeyaml` 1.11, `velocity` 1.7, `guava` 13, `google-http-client` 1.13-beta) make it a real
   upgrade rather than a flag change.
-- **The fat jar needs an explicit goal.** The assembly plugin is not bound to a lifecycle phase, so
-  `./mvnw package` alone produces no runnable jar — you need
-  `./mvnw clean package assembly:single`.
-- **Releases are copies.** There is no published CLI artifact; the jar is committed into each
-  description repository. Reproducible, but it means every site can be on a different version.
+- **The version in `pom.xml` is meaningless.** It has been `1.1-SNAPSHOT` since 2013; the release
+  version comes from the git tag and is stamped into the jar by CI. Nothing is published to a Maven
+  repository, so the artifact is only ever consumed as a jar file.
+- **Releases are still copies in practice.** The jar is published on
+  [Releases](https://github.com/evsinev/firewall-config/releases), but the convention remains that
+  each description repository commits the jar it was generated with. Reproducible, but it means
+  every site can be on a different version.
 - **Thin tests.** Only `findAddress`, the YAML round-trip, a Velocity smoke test and the
-  critical-software parser are covered. There is **no end-to-end test** over a sample configuration
-  directory — [`examples/demo-network`](/firewall-config/quick-start/) exists precisely so that such a
-  test would be easy to add, and running the generators against it is currently the closest thing to
-  one.
+  critical-software parser are covered by unit tests. CI runs every generator against
+  [`examples/demo-network`](/firewall-config/quick-start/) on each push, which catches crashes and
+  configuration the parsers reject, but **nothing asserts on the generated output** — a rule that
+  changes silently will not fail the build.
 
 ## Next
 

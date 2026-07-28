@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Build the fat jar, check the prerequisites, and understand how the tool is released into a config repository.
+description: Download or build the fat jar, check the prerequisites, and understand how the tool is released into a config repository.
 ---
 
 import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
@@ -17,40 +17,64 @@ import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 Dependencies resolve from Maven Central plus `https://maven.pne.io`, which is declared in `pom.xml`
 and publicly readable.
 
+## Download
+
+Every release attaches the ready-to-run fat jar as `firewall-config-<version>.jar`. Pick one from
+the [releases page](https://github.com/evsinev/firewall-config/releases), or with the GitHub CLI:
+
+```sh
+gh release download --repo evsinev/firewall-config --pattern 'firewall-config-*.jar'
+mv firewall-config-*.jar firewall-config.jar     # the name every wrapper script expects
+```
+
+What changed in each release is in
+[`CHANGELOG.md`](https://github.com/evsinev/firewall-config/blob/master/CHANGELOG.md).
+
 ## Build
 
 <Steps>
 
-1. Build the fat jar. The assembly plugin is not bound to a lifecycle phase, so `assembly:single`
-   has to be named explicitly:
+1. Build the fat jar — the assembly is bound to the `package` phase, so nothing else is needed:
 
    ```sh
-   ./mvnw clean package assembly:single
+   ./mvnw clean package
    ```
 
 2. Two jars land in `target/`. The one you want is the shaded one:
 
    ```
-   target/config-1.1-SNAPSHOT-jar-with-dependencies.jar     # ~6 MB, everything included
-   target/config-1.1-SNAPSHOT.jar                           # classes only, not runnable
+   target/firewall-config.jar        # ~6 MB, everything included, runnable
+   target/config-1.1-SNAPSHOT.jar    # classes only, not runnable
    ```
 
 3. Check it runs:
 
    ```sh
    cd examples/demo-network && mkdir -p gen
-   java -jar ../../target/config-1.1-SNAPSHOT-jar-with-dependencies.jar . group-internal gen
+   java -jar ../../target/firewall-config.jar . group-internal gen
    ```
 
 </Steps>
 
-`./mvnw clean install` (without `assembly:single`) runs the unit tests but produces no runnable jar.
+The `1.1-SNAPSHOT` in the thin jar's name is the version that has been in `pom.xml` since 2013 and
+means nothing — release versions come from the git tag.
 
 ## How it is released
 
-There is no published CLI artifact. The convention is that **each network description repository
-carries the jar it was generated with**, copied in as `firewall-config.jar` next to a few shell
-wrappers:
+Pushing a semver tag is the whole release process:
+
+```sh
+git tag -a 1.2.0 -m "1.2.0" && git push origin 1.2.0
+```
+
+[`.github/workflows/release.yml`](https://github.com/evsinev/firewall-config/blob/master/.github/workflows/release.yml)
+then stamps the tag as the project version, builds the fat jar, regenerates the demo network as a
+gate, and publishes a GitHub release whose notes are the matching `CHANGELOG.md` section — a
+missing section fails the build, which is what keeps the changelog honest.
+
+The jar being downloadable does not change how it is *used*. The convention is still that **each
+network description repository carries the jar it was generated with**, copied in as
+`firewall-config.jar` next to a few shell wrappers:
 
 ```
 firewall-<site>/            # the network description repo

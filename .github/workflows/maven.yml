@@ -19,13 +19,13 @@ jobs:
           cache: maven
 
       - name: Build and test
-        run: ./mvnw -B clean package assembly:single
+        run: ./mvnw -B clean package
 
       # The demo network is the closest thing to an end-to-end test: every generator must accept it.
       - name: Generate the demo network
         working-directory: examples/demo-network
         run: |
-          JAR=../../target/config-1.1-SNAPSHOT-jar-with-dependencies.jar
+          JAR=../../target/firewall-config.jar
           mkdir -p gen target wiki-out bind-out
           java -jar $JAR . group-internal gen
           java -cp $JAR com.payneteasy.firewall.MainL3Diagram --run-nwdiag=false --filter internal,ipmi . current

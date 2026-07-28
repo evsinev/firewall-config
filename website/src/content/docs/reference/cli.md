@@ -9,7 +9,7 @@ The jar bundles 21 entry points. Only one is the `Main-Class`; everything else i
 and a fully-qualified class name.
 
 ```sh
-JAR=target/config-1.1-SNAPSHOT-jar-with-dependencies.jar
+JAR=target/firewall-config.jar
 
 java -jar $JAR …                                       # the iptables generator only
 java -cp  $JAR com.payneteasy.firewall.MainL3Diagram …  # everything else

@@ -60,19 +60,21 @@ nowhere — gets the matching FORWARD pair:
 -A FORWARD -s 10.20.22.21 -d 10.20.20.21 -i eth0.203 -o eth0.202 -p tcp -m tcp --sport 5432 -m state --state RELATED,ESTABLISHED -j ACCEPT
 ```
 
-## Build & run
+## Get it
 
-Java 8. The assembly plugin is not bound to a lifecycle phase, so name the goal explicitly:
+Download `firewall-config-<version>.jar` from the
+[latest release](https://github.com/evsinev/firewall-config/releases/latest), or build it
+yourself — Java 8, no separate Maven needed:
 
 ```sh
-./mvnw clean package assembly:single       # -> target/config-1.1-SNAPSHOT-jar-with-dependencies.jar
+./mvnw clean package                       # -> target/firewall-config.jar
 ```
 
 Try it against the bundled demo network:
 
 ```sh
 cd examples/demo-network && mkdir -p gen target
-java -jar ../../target/config-1.1-SNAPSHOT-jar-with-dependencies.jar . group-internal gen
+java -jar ../../target/firewall-config.jar . group-internal gen
 ```
 
 [`examples/demo-network`](examples/demo-network) is a complete fictional estate — VRRP firewall pair,
@@ -84,10 +86,17 @@ generator.
 
 ## Documentation
 
-- [Installation](https://evsinev.github.io/firewall-config/installation/) — build, prerequisites, how the tool is released into a config repo
+- [Installation](https://evsinev.github.io/firewall-config/installation/) — download or build, prerequisites, how the tool is released into a config repo
 - [Configuration](https://evsinev.github.io/firewall-config/configuration/config-directory/) — the YAML input format, `url:` / `access:` / `nat:`
 - [Reference](https://evsinev.github.io/firewall-config/reference/cli/) — CLI and YAML schema tables
 - [Internals](https://evsinev.github.io/firewall-config/internals/packet-derivation/) — how rules are derived, and the [known limitations](https://evsinev.github.io/firewall-config/internals/limitations/)
 
 The site lives in [`website/`](website) and is deployed by
 [`.github/workflows/docs.yml`](.github/workflows/docs.yml).
+
+## Releases
+
+[`CHANGELOG.md`](CHANGELOG.md) records what shipped in each release. Pushing a semver tag
+(`git tag -a 1.2.0 -m 1.2.0 && git push origin 1.2.0`) is the whole release process —
+[`.github/workflows/release.yml`](.github/workflows/release.yml) builds the fat jar, runs the demo
+network through every generator, and publishes a release with the notes from that file.

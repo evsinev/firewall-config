@@ -52,11 +52,10 @@ All addresses are from the documentation ranges reserved by RFC 5737
 
 ## Running it
 
-From this directory, with the fat jar built (`./mvnw clean package assembly:single` in the repo
-root):
+From this directory, with the fat jar built (`./mvnw clean package` in the repo root):
 
 ```sh
-JAR=../../target/config-1.1-SNAPSHOT-jar-with-dependencies.jar
+JAR=../../target/firewall-config.jar
 mkdir -p gen target
 
 # iptables-save file per host, for every host in hosts/internal/
