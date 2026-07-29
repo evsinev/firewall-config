@@ -73,6 +73,19 @@ public class TestFixtures {
         return java.util.Arrays.asList(readFile(aFile).split("\n", -1));
     }
 
+    /**
+     * The text with its lines sorted, for comparing output whose line order depends on
+     * File.listFiles() and therefore differs between filesystems (APFS vs ext4).
+     *
+     * Only two generated files need this - see MainWikiTest and MainBindTest. Everything
+     * else is compared byte for byte.
+     */
+    public static String sortedLines(String aText) {
+        List<String> lines = new java.util.ArrayList<>(java.util.Arrays.asList(aText.split("\n", -1)));
+        java.util.Collections.sort(lines);
+        return String.join("\n", lines);
+    }
+
     /** Keeps only the lines matching a regex - used for zone files, whose headers carry a timestamp. */
     public static String grepLines(File aFile, String aRegex) {
         StringBuilder sb = new StringBuilder();

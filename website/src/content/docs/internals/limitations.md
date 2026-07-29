@@ -66,6 +66,22 @@ out-of-network destination.
 Until this is fixed, pin the service to an explicit address (`url: postgres://10.20.20.21`) or keep
 multi-homed hosts' extra legs inside networks they genuinely talk to directly.
 
+### Two outputs depend on filesystem listing order
+
+`ConfigDaoYaml` loads hosts in `File.listFiles()` order and never sorts them. Almost everything
+downstream sorts before rendering — the packet lists end in `Collections.sort`, access lists go
+through a `TreeSet`, the bind forward and reverse zones through a `TreeSet`/`TreeMap` — but two
+outputs render hosts in load order directly:
+
+- **`static.zone`** — `MainBind.createServiceZone` collects records into an `ArrayList`.
+- **the `<group>_group.wiki` pages** — `WikiServiceImpl.createServersPage` walks `listHosts()`.
+
+Regenerating the same description on macOS (APFS) and Linux (ext4) therefore produces the same
+records in a different order in those two files, which shows up as noise in the review diff. The
+tests compare them as sets for this reason (`MainBindTest`, `MainWikiTest`). Sorting them in the
+generator would be a one-line change, but it rewrites those two files for every existing estate at
+once, so it is deliberately left alone.
+
 ### Shared named services collide in `static.zone`
 
 `services_links` copies a *named* definition onto many hosts, and `MainBind`'s `static.zone` emits one

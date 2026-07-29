@@ -56,9 +56,28 @@ public class MainBindTest {
         assertRecordsMatchGolden("demo.example.com");
     }
 
+    /**
+     * static.zone is the one zone whose records are not sorted: createServiceZone collects
+     * them into an ArrayList while walking findHostsByGroup("internal"), i.e. File.listFiles()
+     * order, so the record order differs between APFS and ext4. Compare them as a set.
+     */
     @Test
-    public void serviceZoneRecordsMatchGolden() {
-        assertRecordsMatchGolden("static");
+    public void serviceZoneRecordsMatchGoldenRegardlessOfOrder() {
+        String actual = TestFixtures.grepLines(new File(outputDir, "static.zone"), RECORD_LINE);
+
+        assertThat(TestFixtures.sortedLines(actual),
+                is(TestFixtures.sortedLines(TestFixtures.golden("bind/static.records"))));
+    }
+
+    /** One A record per named service per host, so a shared service appears several times. */
+    @Test
+    public void theServiceZoneRepeatsASharedServiceForEveryHost() {
+        String records = TestFixtures.grepLines(new File(outputDir, "static.zone"), RECORD_LINE);
+
+        assertThat(records.split("\n").length, is(17));
+        assertThat(records, containsString("ssh       IN A 10.20.20.11"));
+        assertThat(records, containsString("ssh       IN A 10.20.2.21"));
+        assertThat(records, containsString("main-db       IN A 10.20.22.21"));
     }
 
     @Test
@@ -77,8 +96,14 @@ public class MainBindTest {
         assertThat(zone, zone.matches("(?s).*\\n    \\d{10}   ; serial\\n.*"), is(true));
     }
 
+    /**
+     * Byte-exact: the forward zone goes through a TreeSet and each reverse zone through a
+     * TreeMap of TreeSets, so their record order is stable everywhere.
+     */
     private void assertRecordsMatchGolden(String aZoneName) {
-        String actual = TestFixtures.grepLines(new File(outputDir, aZoneName + ".zone"), ".*\\bIN\\s+(A|PTR)\\b.*");
+        String actual = TestFixtures.grepLines(new File(outputDir, aZoneName + ".zone"), RECORD_LINE);
         assertThat(aZoneName, actual, is(TestFixtures.golden("bind/" + aZoneName + ".records")));
     }
+
+    private static final String RECORD_LINE = ".*\\bIN\\s+(A|PTR)\\b.*";
 }

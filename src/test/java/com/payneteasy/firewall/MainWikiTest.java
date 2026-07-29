@@ -42,8 +42,37 @@ public class MainWikiTest {
         assertThat(pages.length, is(20));
 
         for (File page : wikiDir.listFiles()) {
-            assertThat(page.getName(), TestFixtures.readFile(page),
-                    is(TestFixtures.golden("wiki/" + page.getName())));
+            String actual = TestFixtures.readFile(page);
+            String expected = TestFixtures.golden("wiki/" + page.getName());
+
+            if (page.getName().endsWith("_group.wiki")) {
+                // createServersPage walks configDao.listHosts(), i.e. File.listFiles()
+                // order, so the row order differs between APFS and ext4. Compare the rows
+                // as a set and pin the header separately.
+                assertThat(page.getName(), TestFixtures.sortedLines(actual),
+                        is(TestFixtures.sortedLines(expected)));
+                assertThat(page.getName(), actual.split("\n")[0], is(expected.split("\n")[0]));
+            } else {
+                assertThat(page.getName(), actual, is(expected));
+            }
+        }
+    }
+
+    /**
+     * The group pages list hosts in filesystem order, so the same description generates
+     * different bytes on different machines. Pinned as a known non-reproducibility rather
+     * than fixed - adding a sort would change the pages of every real estate at once.
+     */
+    @Test
+    public void theGroupPageRowOrderFollowsTheFilesystem() throws Exception {
+        generate();
+
+        String page = TestFixtures.readFile(new File(wikiDir, "internal_group.wiki"));
+
+        assertThat(page.split("\n")[0], is("h2. internal group"));
+        // all six internal hosts are present, in whatever order the host files were listed
+        for (String host : new String[]{"fw-1", "fw-2", "proxy-1", "adm-1", "db-1", "web-1"}) {
+            assertThat(host, page, containsString("|[[" + host + " details|" + host + "]]|"));
         }
     }
 
