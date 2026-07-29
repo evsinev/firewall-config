@@ -33,8 +33,9 @@ jobs:
           ./mvnw -B -q org.codehaus.mojo:versions-maven-plugin:2.8.1:set \
                  -DnewVersion="$VERSION" -DgenerateBackupPoms=false
 
+      # verify, not package: jacoco:check (80% line coverage) is bound to verify.
       - name: Build and test
-        run: ./mvnw -B clean package
+        run: ./mvnw -B clean verify
 
       # Same sweep as the Build workflow: no release goes out with a generator that cannot
       # read the demo network.

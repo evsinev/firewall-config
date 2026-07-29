@@ -18,8 +18,9 @@ jobs:
           distribution: temurin
           cache: maven
 
+      # verify, not package: jacoco:check (80% line coverage) is bound to verify.
       - name: Build and test
-        run: ./mvnw -B clean package
+        run: ./mvnw -B clean verify
 
       # The demo network is the closest thing to an end-to-end test: every generator must accept it.
       - name: Generate the demo network
