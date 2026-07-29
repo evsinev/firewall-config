@@ -147,9 +147,10 @@ prefix they never read. Pass `current`.
 
 ## Security
 
-- **`RedmineEasyClient` disables TLS verification** — it installs a trust-all `X509TrustManager`.
-  Anything pushed to Redmine (`MainWiki`, `CritSoftCollectorMain`, the podman issue creation) travels
-  over a connection whose certificate is not checked.
+- **`RedmineEasyClient` disables TLS verification** — for an `https://` url it installs a trust-all
+  `X509TrustManager` and a hostname verifier that accepts everything. Anything pushed to Redmine
+  (`MainWiki`, `CritSoftCollectorMain`, the podman issue creation) travels over a connection whose
+  certificate is not checked.
 - **API keys are positional arguments**, so they appear in shell history and `ps` output, and in the
   usual arrangement they live in a wrapper script committed to the description repository. Pass them
   from CI secrets and scope the Redmine key narrowly.
@@ -158,10 +159,11 @@ prefix they never read. Pass `current`.
 
 ## Build and release
 
-- **Java 8.** `source`/`target` are `1.8`. The code itself is modest (streams, `StringJoiner`), so
-  raising the level is plausible, but the Swing/AWT rendering path and the ancient dependency set
-  (`snakeyaml` 1.11, `velocity` 1.7, `guava` 13, `google-http-client` 1.13-beta) make it a real
-  upgrade rather than a flag change.
+- **Java 8.** `source`/`target` are `1.8`, and CI builds on a JDK 8. The dependencies are current
+  but every one of them is pinned to the newest release that still targets Java 8 — `jfreesvg` 3.4.4
+  is the last before 4.x requires Java 11, and Dependabot is configured to skip that major bump.
+  Raising the language level is plausible (the code itself is modest — streams, `StringJoiner`), but
+  it means revisiting those ceilings and the Swing/AWT rendering path.
 - **The version in `pom.xml` is meaningless.** It has been `1.1-SNAPSHOT` since 2013; the release
   version comes from the git tag and is stamped into the jar by CI. Nothing is published to a Maven
   repository, so the artifact is only ever consumed as a jar file.

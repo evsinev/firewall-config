@@ -1,5 +1,6 @@
 package com.payneteasy.firewall.dao.model;
 
+import com.payneteasy.firewall.util.Yamls;
 import org.junit.Test;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -51,10 +52,11 @@ public class ThostYamlRoundTripTest {
         assertThat(yaml().dump(host()), containsString("!!com.payneteasy.firewall.dao.model.THost"));
     }
 
+    /** Yamls, not new Yaml(): snakeyaml 2.x refuses the !!com.payneteasy tag on load. */
     private static Yaml yaml() {
         DumperOptions options = new DumperOptions();
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.AUTO);
-        return new Yaml(options);
+        return Yamls.newYaml(options);
     }
 
     private static THost host() {

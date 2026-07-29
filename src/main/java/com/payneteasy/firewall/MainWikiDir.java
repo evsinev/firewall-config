@@ -37,7 +37,7 @@ public class MainWikiDir {
             redmineClient.executeCreateOrUpdateWikiPage(
                     file.getName() // page name
                     , file.getName() // title
-                    , Files.toString(file, Charset.defaultCharset())
+                    , Files.asCharSource(file, Charset.defaultCharset()).read()
                     , "update info from server"
             );
         }

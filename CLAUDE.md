@@ -112,8 +112,13 @@ Regardless of file:
   getters. Renaming one breaks `iptables.vm` silently — Velocity resolves names at render time.
 - Beans in `dao/model` and `service/model` are plain public-field beans; snakeyaml and Velocity need
   that, so no lombok there.
+- **Build every snakeyaml `Yaml` through `util/Yamls`, never `new Yaml(...)`.** snakeyaml 2.x refuses
+  global `!!com.foo` tags by default, and `pages_history.yml` is dumped with one; `Yamls` installs the
+  `TagInspector` that allows the `com.payneteasy.firewall.` prefix. A direct `new Yaml()` compiles and
+  then fails at load time with "Global tag is not allowed".
 - No logging framework. Errors are long multi-line `ConfigurationException` / `IllegalStateException`
   messages naming the offending host and service — keep that; it is the product's error UX.
+  (`slf4j-nop` is on the classpath only to silence Velocity, which logs through slf4j.)
 - 4-space indent, wildcard imports are normal, local declarations column-aligned in older classes.
 
 ## Traps
@@ -132,6 +137,11 @@ Regardless of file:
   `MainExternalServices`) — pass `current`.
 - VRRP packets are computed but `iptables.vm` ignores them, so the generated rules do not permit VRRP
   advertisements. That needs a `customRules` entry for protocol 112 to `224.0.0.18`.
+- **`VelocityBuilder` must keep `parser.allow_hyphen_in_identifiers`**: every context key in
+  `iptables.vm` has a hyphen (`$input-packets`, `$custom-input-rules`). Velocity 2 otherwise renders
+  the reference literally instead of throwing, so the damage shows up as a broken rule set, not a
+  stack trace. `parser.space_gobbling=bc` next to it pins the Velocity 1.7 whitespace the golden
+  files were made with.
 
 ## Docs site (`website/`)
 

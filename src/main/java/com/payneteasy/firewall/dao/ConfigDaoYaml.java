@@ -3,7 +3,6 @@ package com.payneteasy.firewall.dao;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.payneteasy.firewall.dao.model.*;
 import com.payneteasy.firewall.service.ConfigurationException;
@@ -18,6 +17,7 @@ import java.util.*;
 
 import com.payneteasy.firewall.util.Networks;
 import com.payneteasy.firewall.util.Strings;
+import com.payneteasy.firewall.util.Yamls;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -35,7 +35,7 @@ public class ConfigDaoYaml implements IConfigDao {
 
         final DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setPrettyFlow(true);
-        theYaml = new Yaml(dumperOptions);
+        theYaml = Yamls.newYaml(dumperOptions);
         theDir = aDir;
 
         theHosts = new ArrayList<THost>();
@@ -118,9 +118,7 @@ public class ConfigDaoYaml implements IConfigDao {
     private void loadPagesHistory(File aFile) throws IOException {
         TPagesHistory pagesHistory;
         if (aFile.exists()) {
-            Reader in = null;
-            try {
-                in = Files.newReader(aFile, Charsets.UTF_8);
+            try (Reader in = Files.newReader(aFile, Charsets.UTF_8)) {
                 pagesHistory = theYaml.loadAs(in, TPagesHistory.class);
                 if (pagesHistory != null) {
                     for (TPageHistory pageHistory : pagesHistory.pageHistories) {
@@ -130,10 +128,8 @@ public class ConfigDaoYaml implements IConfigDao {
                         thePagesHistoryMap.put(pageHistory.pageName, pageHistory);
                     }
                 }
-            } finally {
-                Closeables.closeQuietly(in);
             }
-        }      
+        }
     }
     
     private TProtocols loadProtocols(File aFile) throws IOException {
@@ -195,17 +191,13 @@ public class ConfigDaoYaml implements IConfigDao {
         return ret;
     }
 
-    @Override public void persistPagesHistory() throws FileNotFoundException {
+    @Override public void persistPagesHistory() throws IOException {
         File file = new File(theDir, "pages_history.yml");
-        Writer writer = null; 
-        try {
-            writer = Files.newWriter(file, Charsets.UTF_8);
+        try (Writer writer = Files.newWriter(file, Charsets.UTF_8)) {
             TPagesHistory history = new TPagesHistory();
             history.pageHistories = Lists.newArrayList(thePagesHistoryMap.values());
             history.lastUpdateDate = new Date();
             theYaml.dump(history, writer);
-        } finally {
-            Closeables.closeQuietly(writer);
         }
     }
 

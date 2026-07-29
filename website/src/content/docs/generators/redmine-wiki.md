@@ -39,6 +39,11 @@ description shows up as a change to the documentation in the same review.
 A host whose pages cannot be built is logged as a warning and skipped rather than aborting the run —
 so check the output for `Cannot process host [...]` instead of relying on the exit code.
 
+Each page is sent as one `PUT <wiki-url>/<page>.json` with a `{"wiki_page": {"text": …,
+"comments": …}}` body and an `X-Redmine-API-Key` header. Dots in a page name become underscores.
+A `409` means the page changed in Redmine since the run started; a `422` means Redmine rejected the
+content, and the response body says why.
+
 ## Pages
 
 | Page | One per | Contents |
@@ -125,8 +130,9 @@ hand-written `<host>_run` pages under version control next to the description.
 
 Two things to be aware of before pointing this at a production Redmine:
 
-- `RedmineEasyClient` installs a **trust-all** `X509TrustManager` — TLS certificates are not verified.
-  Treat the connection as unauthenticated at the transport level.
+- `RedmineEasyClient` installs a **trust-all** `X509TrustManager` and an accept-everything hostname
+  verifier for `https://` urls — TLS certificates are not verified. Treat the connection as
+  unauthenticated at the transport level.
 - The API key is a positional argument, so it lands in shell history, in `ps` output and — in the usual
   arrangement — in a wrapper script inside the description repository. Pass it from a CI secret
   (`"$REDMINE_KEY"`), and give the key the narrowest Redmine permissions that work.
