@@ -23,6 +23,11 @@ L3 diagram groups by `/24`, and the "same network" suppression filter compares a
 the last dot. A `/25` or `/23` allocation cannot be described faithfully — split it into `/24`s, or
 accept that two hosts in different halves of a `/24` are treated as adjacent.
 
+Note that the *supported* `/24` case is the absent one: writing `netmask: 24` explicitly throws too.
+Both behaviours are pinned by `ModelBeansTest.onlyAnAbsentNetmaskMeansSlash24` /
+`anExplicitSlash24NetmaskThrows`, and the string comparison by `NetworksTest`, so a fix has to
+update those tests deliberately rather than trip over them.
+
 ### SNAT for private ranges is hard-coded
 
 The SNAT decision is `isPublicAddress(destination)` — *plus a literal list of private addresses* baked
@@ -52,6 +57,11 @@ source has a leg in or near the destination's network and can be wrong otherwise
 Concretely: a host with legs in `10.20.20.0/24` and `10.20.6.0/24`, reaching `10.20.2.21`, gets
 `10.20.6.31` in the rule — because `6` and `2` share more leading bits than `20` and `2` do — while
 Linux will actually send from `10.20.20.31` via the default gateway. The rule then never matches.
+
+The "binary prefix" is in fact computed on the *decimal* rendering of
+`Integer.toBinaryString()`, which drops leading zeros, so the comparison is not even a true prefix
+length — see `PacketServiceImplTest.testFindAddress`, which pins the current answer for an
+out-of-network destination.
 
 Until this is fixed, pin the service to an explicit address (`url: postgres://10.20.20.21`) or keep
 multi-homed hosts' extra legs inside networks they genuinely talk to directly.
@@ -143,11 +153,19 @@ prefix they never read. Pass `current`.
   [Releases](https://github.com/evsinev/firewall-config/releases), but the convention remains that
   each description repository commits the jar it was generated with. Reproducible, but it means
   every site can be on a different version.
-- **Thin tests.** Only `findAddress`, the YAML round-trip, a Velocity smoke test and the
-  critical-software parser are covered by unit tests. CI runs every generator against
-  [`examples/demo-network`](/firewall-config/quick-start/) on each push, which catches crashes and
-  configuration the parsers reject, but **nothing asserts on the generated output** — a rule that
-  changes silently will not fail the build.
+- **Coverage is measured over a reduced bundle.** `./mvnw clean verify` fails below 80% line
+  coverage, but roughly 31% of `src/main/java` is excluded from the denominator because it cannot be
+  unit tested: the Swing L2 editor, the Redmine HTTP clients, `podmancheck`, the `nwdiag`
+  subprocess wrapper and thirteen CLI shims that call `System.exit`. The exclusion list lives in
+  `pom.xml` with a comment per entry. The headline number is therefore not whole-tree coverage, and
+  the excluded code is exercised only by the demo-network sweep, which checks exit codes and not
+  output.
+- **Golden files are the regression net.** The output of the iptables, wiki, bind, keepalived,
+  RouterOS and nwdiag generators is compared byte for byte against
+  `src/test/resources/golden/`, so a silently changed rule now fails the build. The cost is that a
+  deliberate change requires regenerating those files and reviewing the diff — see the *Verify a
+  change* section of `CLAUDE.md`. Bind zone files are compared by record lines only, because their
+  headers carry a timestamp, the local hostname and `user.name`.
 
 ## Next
 

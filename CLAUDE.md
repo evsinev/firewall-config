@@ -20,9 +20,33 @@ The fat jar is the only delivery form — nothing is published to a Maven reposi
 
 ## Verify a change
 
-`src/test` has four test classes, of which only `findAddress` and the critsoft parser are meaningfully
-covered, so **the gate is the demo-network sweep** — the commands CI runs in
-`.github/workflows/maven.yml`. From `examples/demo-network`:
+**The gate is `./mvnw clean verify`** — 208 tests plus a JaCoCo rule that fails the build below
+**80% line coverage**. The measured bundle excludes the Swing editor, the Redmine clients,
+`podmancheck`, `CommandProcess` and thirteen CLI shims (~31% of the tree); the list is in
+`pom.xml`, one comment per entry. Adding a new CLI means either testing it or adding it there.
+
+The generated output is compared byte for byte against expected files in
+`src/test/resources/golden/` — iptables for 7 hosts, all 20 wiki pages, bind `zones.conf` and
+zone records, keepalived, RouterOS and nwdiag. **After deliberately changing `PacketServiceImpl`
+or `iptables.vm`, regenerate the golden files and read that diff** — it is the review step:
+
+```sh
+./mvnw clean package
+cd examples/demo-network && mkdir -p gen && java -jar ../../target/firewall-config.jar . group-internal gen
+java -jar ../../target/firewall-config.jar . sw-core-1 gen
+cp gen/* ../../src/test/resources/golden/iptables/          # then read `git diff`
+```
+
+Zone files are compared by record lines only — `MainBind` stamps a `yyMMddHHmm` serial, a date,
+the local hostname and `user.name` into every header. `MainWiki` skips pages whose hash is
+unchanged, so its tests run against a copy without `pages_history.yml`
+(`TestFixtures.copyDemoNetworkInputs`).
+
+Where a trap from [Traps](#traps) is pinned by a test, the test says so in a comment — do not
+"fix" the production behaviour to make it pass.
+
+The demo-network sweep still runs in CI as a second net — every generator must accept the demo
+network. From `examples/demo-network`:
 
 ```sh
 JAR=../../target/firewall-config.jar
@@ -36,9 +60,12 @@ java -cp $JAR com.payneteasy.firewall.MainKeepalived . fw-1
 java -cp $JAR com.payneteasy.firewall.MainMikrotik . sw-core-1
 ```
 
-**Nothing asserts on the generated output.** After touching `PacketServiceImpl` or `iptables.vm`,
-regenerate `examples/demo-network/gen/` and read the diff — that is the review step. A silently
-changed rule will not fail any build.
+Test helpers live in `src/test/java/com/payneteasy/firewall/testing/`: `TestFixtures` (fixture
+lookup, golden text, recursive copy, stdout capture) and `RecordingCanvas` (an `ICanvas` that
+records draw calls, which is what makes the L2 model testable headless). Broken-config fixtures —
+one directory per `ConfigDaoYaml` validation rule — are under `src/test/resources/config/`; each
+one needs a *valid* `protocols.yml`, or the constructor fails with `FileNotFoundException` and the
+test passes for the wrong reason.
 
 ## How the code is laid out
 
@@ -69,8 +96,10 @@ Three stages, always in this order:
 
 New code: picocli (`@CommandLine.Command` + `Callable<Integer>`; extend
 `shell/AbstractDirPrefixFilterCommand` when the command takes `<dir> <prefix> [--filter]`), lombok
-`@Data`/`@Builder`/`@FieldDefaults` for Gson DTOs only, ordinary field names, JUnit 4 with hamcrest
-`assertThat`.
+`@Data`/`@Builder`/`@FieldDefaults` for Gson DTOs only, ordinary field names, JUnit 4 with
+`org.hamcrest.MatcherAssert.assertThat` (not the deprecated `Assert.assertThat`). No JUnit 5, no
+AssertJ, no Mockito — `IConfigDao`'s 17 methods are used interdependently, so tests build real
+`THost` beans or load a fixture directory instead of stubbing.
 
 Editing an existing file: match that file's style — `aHostname` argument prefix, `theHosts` fields,
 fields declared at the bottom of the class in `ConfigDaoYaml` and `PacketServiceImpl`. Do not

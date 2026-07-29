@@ -9,6 +9,38 @@ onwards the release version comes from the git tag — pushing a tag like `1.2.0
 jar and publishes it as `firewall-config-1.2.0.jar`
 (see [`.github/workflows/release.yml`](.github/workflows/release.yml)).
 
+## [Unreleased]
+
+### Added
+
+- **A test suite and an 80% coverage gate.** 208 JUnit tests, up from 9. The generated output
+  of six generators is now compared against expected files committed under
+  `src/test/resources/golden/`, so a silently changed iptables rule, wiki page, bind record,
+  keepalived instance, RouterOS vlan block or nwdiag network fails the build — the gap CLAUDE.md
+  used to record as *"nothing asserts on the generated output"*. Alongside them, unit tests cover
+  the packet derivation's error branches, every `ConfigDaoYaml` validation rule (one deliberately
+  broken fixture directory each, under `src/test/resources/config/`), the L2 graph derivation and
+  diagram model — headless, through a recording `ICanvas` — and the network/string helpers.
+  Several documented traps are pinned by name so they cannot regress unnoticed:
+  `TInterface.getLongNetmask()` throwing for an explicit `netmask: 24`, `findAddress` comparing
+  binary *strings* and so mis-picking the leg for an out-of-network destination, `isInNetwork`
+  hard-coding /24, and `isIpAddress` accepting DNS names.
+- **JaCoCo with a hard gate.** `./mvnw clean verify` now fails below 80% line coverage.
+  The measured bundle excludes the Swing L2 editor, the Redmine HTTP clients, `podmancheck`,
+  `CommandProcess` and thirteen CLI shims — roughly 31% of `src/main/java` that cannot be unit
+  tested; each exclusion is commented in `pom.xml`. Adding a new CLI now means either testing it
+  or adding it to that list. Current coverage is 92%.
+
+### Changed
+
+- CI and the release workflow run `clean verify` instead of `clean package`, so the coverage
+  gate actually runs. The fat jar is still produced by `package` and the demo-network sweep is
+  unchanged.
+- junit 4.10 → 4.13.2 (for `assertThrows` and hamcrest-core 1.3) plus `hamcrest-library`;
+  `maven-surefire-plugin` pinned to 2.22.2 and run with `java.awt.headless=true`.
+- `VelocityBuilderTest` and `YamlTest`, which printed to stdout and asserted nothing, were
+  rewritten with assertions and moved to the packages of the classes they cover.
+
 ## [1.2.0] — 2026-07-29
 
 First automated release. Every generator is now exercised by CI against a public demo network,
