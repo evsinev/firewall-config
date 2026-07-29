@@ -1,0 +1,23 @@
+description:   Partner settlement API reached over an IPsec tunnel
+justification: Settlement requests to a partner whose own network is RFC 1918
+# The tunnel terminates on the DMZ concentrator, so the partner network is routed through the
+# firewall's DMZ leg rather than through its public one.
+gw: 10.20.2.1
+
+# The address is private, but the host is not part of our address space: `external_peer` is what
+# tells the generator to translate traffic towards it. Without it the flow would be a plain
+# FORWARD, because the SNAT decision otherwise only looks at whether the address is public.
+external_peer: true
+
+interfaces:
+- name: eth0
+  ip:   172.16.4.50
+
+services:
+
+- url:           https
+  name:          partner-settlement
+  description:   Partner settlement API over the tunnel
+  justification: The application submits settlement requests to the partner
+  nat:           https://10.20.2.1
+  access:        [web-1]

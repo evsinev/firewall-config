@@ -30,6 +30,7 @@ com.payneteasy.firewall.dao.model.THost
 | `color` | `"0xRRGGBB"` | pale beige | no | L2 diagram box and printed host label. |
 | `blockedIpAddresses` | list of [BlockedIpAddress](#blockedipaddress) | — | no | |
 | `customRules` | list of [CustomRule](#customrule) | — | no | |
+| `external_peer` | boolean | `false` | no | The host is outside our address space despite a private address (a partner behind a tunnel). Traffic *towards* it is SNAT-ed to the service's `nat:` address, as for a public destination. |
 
 `name` and `group` are derived from the file name and its parent directory and must not appear in the
 file.

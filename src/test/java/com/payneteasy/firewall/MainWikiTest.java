@@ -39,7 +39,7 @@ public class MainWikiTest {
         generate();
 
         String[] pages = wikiDir.list();
-        assertThat(pages.length, is(20));
+        assertThat(pages.length, is(22));
 
         for (File page : wikiDir.listFiles()) {
             String actual = TestFixtures.readFile(page);
@@ -78,14 +78,14 @@ public class MainWikiTest {
 
     /**
      * MainWiki swallows per-host exceptions into a log warning, so an empty or missing
-     * page is the only symptom of a broken host. Assert both pages exist for all 8 hosts.
+     * page is the only symptom of a broken host. Assert both pages exist for all 9 hosts.
      */
     @Test
     public void generatesTwoNonEmptyPagesForEveryHost() throws Exception {
         generate();
 
         for (String host : new String[]{"adm-1", "db-1", "fw-1", "fw-2", "proxy-1", "web-1",
-                "sw-core-1", "partner-api.example.com"}) {
+                "sw-core-1", "partner-api.example.com", "partner-vpn.example.com"}) {
             for (String suffix : new String[]{"_details", "_packets"}) {
                 File page = new File(wikiDir, host + suffix + ".wiki");
                 assertThat(page.getName() + " exists", page.isFile(), is(true));
@@ -113,7 +113,7 @@ public class MainWikiTest {
 
         // the history reloads without tripping the pageHash == 0 validation
         ConfigDaoYaml reloaded = new ConfigDaoYaml(configDir);
-        assertThat(reloaded.thePagesHistoryMap.size(), is(20));
+        assertThat(reloaded.thePagesHistoryMap.size(), is(22));
         assertThat(reloaded.thePagesHistoryMap.get("services").pageHash, not(0L));
 
         File secondRun = tmp.newFolder("wiki-out-2");
@@ -127,7 +127,7 @@ public class MainWikiTest {
 
         File forced = tmp.newFolder("wiki-out-forced");
         MainWiki.main(new String[]{forced.getPath(), "dummy-key", configDir.getPath(), "--force"});
-        assertThat(forced.list().length, is(20));
+        assertThat(forced.list().length, is(22));
     }
 
     @Test

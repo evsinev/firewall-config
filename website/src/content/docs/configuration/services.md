@@ -160,6 +160,35 @@ The destination is public, so the firewall between the two translates our source
 -A POSTROUTING -s 10.20.2.21  -d 198.51.100.50 -p tcp  --dport 443 -o eth0.100 -j SNAT --to-source 198.51.100.10
 ```
 
+### SNAT — a private peer that is not ours
+
+A partner reached over a tunnel has an RFC 1918 address, so nothing about it *looks* public — but
+traffic towards it still has to be translated. Mark the peer with `external_peer: true` and it is
+treated exactly like a public destination:
+
+```yaml title="hosts/external/partner-vpn.example.com.yml"
+gw: 10.20.2.1              # the tunnel terminates on the DMZ concentrator
+external_peer: true        # not part of our address space, despite the private address
+
+interfaces:
+- name: eth0
+  ip:   172.16.4.50
+
+services:
+- url:           https
+  name:          partner-settlement
+  justification: The application submits settlement requests to the partner
+  nat:           https://10.20.2.1
+  access:        [web-1]
+```
+
+```sh title="gen/fw-1"
+-A POSTROUTING -s 10.20.20.21  -d 172.16.4.50 -p tcp  --dport 443 -o eth0.201 -j SNAT --to-source 10.20.2.1
+```
+
+The flag is per host, and it only changes the *destination* side of the decision — see
+[Limitations](/firewall-config/internals/limitations/#snat-to-a-private-peer-is-a-per-host-flag).
+
 ### DNAT — a public host reaching a private service
 
 Declared on *our* host, whose service is published at a public address:
@@ -186,8 +215,8 @@ no translation and gets none.
 - A flow whose **source** is public needs `nat:`, or it fails with `No nat for service … at host …`.
 - A flow where **both** ends are public cannot be expressed and raises
   `Trying to config both SNAT and DNAT with …`.
-- "Public" means: not `10.`, not `172.16`, not `192.168`. Some private ranges are hard-coded as
-  needing SNAT anyway — see [Limitations](/firewall-config/internals/limitations/#snat-for-private-ranges-is-hard-coded).
+- "Public" means: not `10.`, not `172.16`, not `192.168` — plus any host marked
+  `external_peer: true`, which counts as public when it is the destination.
 - Give the NAT address a DNS name via `vips.names` and refer to it by name, so re-addressing the
   perimeter is a one-line change.
 

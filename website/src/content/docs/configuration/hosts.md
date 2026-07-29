@@ -47,6 +47,7 @@ services:
 | `color` | `"0xRRGGBB"` | no | Box colour in the L2 diagram and on the printed host label. Defaults to a pale beige. |
 | `blockedIpAddresses` | list | no | See [Blocked addresses](#blocked-addresses). |
 | `customRules` | list | no | See [Custom rules](#custom-rules). |
+| `external_peer` | boolean | no | The host is not part of our address space even though its address is private — a partner reached over a tunnel. Traffic towards it is translated: see [SNAT — a private peer that is not ours](/firewall-config/configuration/services/#snat--a-private-peer-that-is-not-ours). |
 
 `name` and `group` are **not** fields — they come from
 [the file name and directory](/firewall-config/configuration/config-directory/#host-names-and-groups-come-from-the-filesystem).

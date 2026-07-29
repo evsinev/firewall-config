@@ -100,6 +100,10 @@
 -A FORWARD -s 10.20.2.21 -d 198.51.100.50 -i eth0.201 -o eth0.100 -p tcp -m tcp --dport 443 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -s 198.51.100.50 -d 10.20.2.21 -i eth0.100 -o eth0.201 -p tcp -m tcp --sport 443 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
+# web-1 -> https://partner-vpn.example.com   * --> partner-settlement
+-A FORWARD -s 10.20.20.21 -d 172.16.4.50 -i eth0.202 -o eth0.201 -p tcp -m tcp --dport 443 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A FORWARD -s 172.16.4.50 -d 10.20.20.21 -i eth0.201 -o eth0.202 -p tcp -m tcp --sport 443 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
 # adm-1 -> proxy://proxy-1   * --> egress-proxy
 -A FORWARD -s 10.20.20.31 -d 10.20.2.21 -i eth0.202 -o eth0.201 -p tcp -m tcp --dport 3128 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -s 10.20.2.21 -d 10.20.20.31 -i eth0.201 -o eth0.202 -p tcp -m tcp --sport 3128 -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -168,6 +172,9 @@ COMMIT
 
 # proxy-1 -> https://partner-api.example.com    * --> partner-api
 -A POSTROUTING -s 10.20.2.21  -d 198.51.100.50 -p tcp  --dport 443 -o eth0.100 -j SNAT --to-source 198.51.100.10
+
+# web-1 -> https://partner-vpn.example.com    * --> partner-settlement
+-A POSTROUTING -s 10.20.20.21  -d 172.16.4.50 -p tcp  --dport 443 -o eth0.201 -j SNAT --to-source 10.20.2.1
 
 # partner-api.example.com -> https://web-1     * --> web-app
 -A PREROUTING -d 198.51.100.10 -p tcp -m tcp --dport 443 -j DNAT --to-destination 10.20.20.21:443

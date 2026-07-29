@@ -59,6 +59,10 @@
 -A OUTPUT -p tcp -m tcp -d 10.20.22.21 --dport 5432 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A INPUT  -p tcp -m tcp -s 10.20.22.21 --sport 5432 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
+# https://partner-vpn.example.com   * --> partner-settlement
+-A OUTPUT -p tcp -m tcp -d 172.16.4.50 --dport 443 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
+-A INPUT  -p tcp -m tcp -s 172.16.4.50 --sport 443 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
 # dns://proxy-1   * --> internal-dns
 -A OUTPUT -p udp -m udp -d 10.20.2.21 --dport 53 -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT
 -A INPUT  -p udp -m udp -s 10.20.2.21 --sport 53 -m state --state RELATED,ESTABLISHED -j ACCEPT

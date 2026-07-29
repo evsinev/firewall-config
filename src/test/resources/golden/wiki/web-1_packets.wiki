@@ -16,5 +16,6 @@ h2. Output packets
 
 |_.Remote hostname|_.Remote ip address|_.Protocol|_.Port|_.Service name|_.Description|_.Justification|
 |[[db-1 details|db-1]]|10.20.22.21|tcp main-db|5432|postgres|Primary PostgreSQL cluster|The web application stores transaction data here|
+|[[partner-vpn_example_com details|partner-vpn.example.com]]|172.16.4.50|tcp partner-settlement|443|https|Partner settlement API over the tunnel|The application submits settlement requests to the partner|
 |[[proxy-1 details|proxy-1]]|10.20.2.21|udp internal-dns|53|dns|Recursive resolver for the whole estate|Name resolution without exposing internal names outside|
 |[[proxy-1 details|proxy-1]]|10.20.2.21|tcp egress-proxy|3128|proxy|Forward proxy for outgoing HTTPS callbacks|Applications must not reach the internet directly|

@@ -43,7 +43,7 @@ public class ConfigDaoYamlTest {
 
     @Test
     public void loadsEveryHostFile() {
-        assertThat(dao.listHosts(), hasSize(8));
+        assertThat(dao.listHosts(), hasSize(9));
     }
 
     /** name and group come from the filesystem, not from the yml body. */
@@ -158,7 +158,7 @@ public class ConfigDaoYamlTest {
     public void findsHostsByGroupAndByGroups() {
         assertThat(dao.findHostsByGroup("internal"), hasSize(6));
         assertThat(dao.findHostsByGroup("nope"), empty());
-        assertThat(dao.findHostsByGroups("external", "ipmi"), hasSize(2));
+        assertThat(dao.findHostsByGroups("external", "ipmi"), hasSize(3));
     }
 
     @Test

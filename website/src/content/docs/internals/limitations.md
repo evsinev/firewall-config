@@ -28,25 +28,27 @@ Both behaviours are pinned by `ModelBeansTest.onlyAnAbsentNetmaskMeansSlash24` /
 `anExplicitSlash24NetmaskThrows`, and the string comparison by `NetworksTest`, so a fix has to
 update those tests deliberately rather than trip over them.
 
-### SNAT for private ranges is hard-coded
+### SNAT to a private peer is a per-host flag
 
-The SNAT decision is `isPublicAddress(destination)` — *plus a literal list of private addresses* baked
-into `PacketServiceImpl`, marked `// todo hot fix for SNAT`:
+The SNAT decision is `isPublicAddress(destination)` **or** `external_peer: true` on the destination
+host:
 
 ```java
-if(isPublicAddress(destinationHost.getDefaultIp())
-        || destinationHost.getDefaultIp().equals("10.12.12.50")
-        || destinationHost.getDefaultIp().equals("10.170.1.1")
-        …
-        || destinationHost.getDefaultIp().startsWith("172.16.4.")
-        ) { // todo hot fix for SNAT
+if (isPublicAddress(destinationHost.getDefaultIp()) || destinationHost.external_peer) {
 ```
 
-These are real addresses from the sites the tool was written for: partner networks reached over
-tunnels, where traffic must be translated even though both ends are RFC 1918. **Adding a
-SNAT-ed private network today requires editing Java and rebuilding the jar** — it cannot be expressed
-in YAML. If you adopt the tool for a different estate, this list is the first thing to make
-configurable.
+`external_peer` exists for partner networks reached over tunnels, where traffic must be translated
+even though both ends are RFC 1918. Those destinations used to be a literal list of real addresses
+inside `PacketServiceImpl`, marked `// todo hot fix for SNAT`, so adding one meant editing Java and
+rebuilding the jar. What is left is the granularity:
+
+- **The flag is per host, not per network.** A whole partner `/24` cannot be declared in one line;
+  every host in it needs its own `external_peer: true`. Forgetting one is silent — the flow is still
+  derived, it just comes out as a plain `FORWARD` with no translation.
+- **It only affects the destination side.** A packet whose *source* is an `external_peer` is not
+  treated as public, so it produces no DNAT. That asymmetry is deliberate: making it symmetric would
+  turn today's untranslated inbound flows into DNAT, and flows that are already SNAT-ed into the
+  `Trying to config both SNAT and DNAT with …` error.
 
 ### `findAddress` is not a routing lookup
 

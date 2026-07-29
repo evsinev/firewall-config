@@ -1,0 +1,10 @@
+
+h2. Interfaces
+
+|_.Name|_.IP|_.Virtual IPs|_.DNS|
+|eth0|172.16.4.50|||
+
+h2. Services and input packets
+
+|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|
+|https:partner-settlement|eth0|172.16.4.50|443|[[web-1 details|web-1]] |Partner settlement API over the tunnel|The application submits settlement requests to the partner|

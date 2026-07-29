@@ -33,6 +33,7 @@ public class ThostYamlRoundTripTest {
         assertThat(loaded.services, hasSize(1));
         assertThat(loaded.services.get(0).program, is("nginx"));
         assertThat(loaded.services.get(0).access, contains("internet", "remote"));
+        assertThat(loaded.external_peer, is(true));
     }
 
     /** dumpAs with Tag.MAP writes plain yaml, without the !!com.payneteasy class tag. */
@@ -77,6 +78,7 @@ public class ThostYamlRoundTripTest {
         host.description = "host description";
         host.justification = "host just";
         host.gw = "10.0.0.1";
+        host.external_peer = true;
         host.interfaces = new ArrayList<>(Arrays.asList(eth0, alias));
         host.services = new ArrayList<>(Arrays.asList(service));
         return host;
