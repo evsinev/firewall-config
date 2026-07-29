@@ -168,7 +168,7 @@
 
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.2</version>
+                <version>3.5.6</version>
                 <configuration>
                     <!-- Never set <argLine> here: it silently replaces the one
                          jacoco:prepare-agent injects and coverage drops to 0%. -->
