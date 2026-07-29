@@ -1,6 +1,7 @@
 package com.payneteasy.firewall.l2.editor.create;
 
 import com.payneteasy.firewall.l2.editor.model.LinkType;
+import com.payneteasy.firewall.util.Yamls;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -36,7 +37,7 @@ public class L2CustomParameters {
         final DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setIndent(4);
         dumperOptions.setPrettyFlow(true);
-        Yaml yaml = new Yaml(dumperOptions);
+        Yaml yaml = Yamls.newYaml(dumperOptions);
         final String text = yaml.dump(params);
         System.out.println("text = " + text);
     }
@@ -91,7 +92,7 @@ public class L2CustomParameters {
     }
 
     public static L2CustomParameters load(File aFile) {
-        Yaml yaml = new Yaml();
+        Yaml yaml = Yamls.newYaml();
         try {
             return yaml.loadAs(new FileReader(aFile), L2CustomParameters.class);
         } catch (FileNotFoundException e) {

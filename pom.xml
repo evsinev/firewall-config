@@ -44,67 +44,82 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- 2.x refuses global !!com.foo tags by default; pages_history.yml is written
+             with one, so every Yaml is built through util/Yamls, not `new Yaml(...)`. -->
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>1.11</version>
+            <version>2.4</version>
         </dependency>
 
+        <!-- velocity-engine-core, not velocity: 1.7 is CVE-2020-13936 and drags in
+             commons-collections 3.2.1. The 2.x property names and the hyphens in
+             $blocked-ip-addresses are handled in util/VelocityBuilder. -->
         <dependency>
             <groupId>org.apache.velocity</groupId>
-            <artifactId>velocity</artifactId>
-            <version>1.7</version>
+            <artifactId>velocity-engine-core</artifactId>
+            <version>2.4.1</version>
         </dependency>
-       
+
+        <!-- velocity-engine-core logs through slf4j-api; without a provider every
+             generator prints a "Failed to load StaticLoggerBinder" banner to stderr. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>1.7.36</version>
+        </dependency>
+
+        <!-- -jre, not -android: both are Java 8 compatible, -jre is the normal flavour -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>13.0.1</version>
+            <version>33.6.0-jre</version>
         </dependency>
-      
-        <dependency>
-            <groupId>com.google.http-client</groupId>
-            <artifactId>google-http-client</artifactId>
-            <version>1.13.1-beta</version>
-        </dependency> 
 
+        <!-- 3.4.4 is the last Java 8 release; 4.x needs Java 11 and moves the
+             SVGGraphics2D package to org.jfree.svg. -->
         <dependency>
             <groupId>org.jfree</groupId>
             <artifactId>jfreesvg</artifactId>
-            <version>3.2</version>
+            <version>3.4.4</version>
         </dependency>
 
         <dependency>
             <groupId>com.github.spullara.mustache.java</groupId>
             <artifactId>compiler</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.14</version>
         </dependency>
 
+        <!-- direct dependency on purpose: it overrides the older 3.17.0 that
+             velocity-engine-core brings in -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.7</version>
+            <version>3.20.0</version>
         </dependency>
 
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
-            <version>4.6.2</version>
+            <version>4.7.7</version>
         </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
+            <version>1.18.46</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.11.0</version>
+            <version>2.14.0</version>
         </dependency>
 
+        <!-- the only HTTP stack: both Redmine clients (wiki pages and issues) go
+             through it. HttpRequestParameters is what still lets RedmineEasyClient
+             install its trust-all socket factory. -->
         <dependency>
             <groupId>com.payneteasy.http-client</groupId>
             <artifactId>http-client-impl</artifactId>
@@ -202,8 +217,6 @@
 
                                 <!-- network, and a trust-all X509TrustManager -->
                                 <exclude>com/payneteasy/firewall/redmine/RedmineEasyClient*</exclude>
-                                <exclude>com/payneteasy/firewall/redmine/RedmineHttpRequestInitializer*</exclude>
-                                <exclude>com/payneteasy/firewall/redmine/WikiPageXml*</exclude>
                                 <exclude>com/payneteasy/firewall/redmine/impl/**</exclude>
                                 <exclude>com/payneteasy/firewall/redmine/messages/**</exclude>
                                 <exclude>com/payneteasy/firewall/redmine/model/**</exclude>
@@ -260,8 +273,6 @@
                                 <exclude>com/payneteasy/firewall/l2/editor/actions/MouseMovementListener*</exclude>
                                 <exclude>com/payneteasy/firewall/l2/labels/**</exclude>
                                 <exclude>com/payneteasy/firewall/redmine/RedmineEasyClient*</exclude>
-                                <exclude>com/payneteasy/firewall/redmine/RedmineHttpRequestInitializer*</exclude>
-                                <exclude>com/payneteasy/firewall/redmine/WikiPageXml*</exclude>
                                 <exclude>com/payneteasy/firewall/redmine/impl/**</exclude>
                                 <exclude>com/payneteasy/firewall/redmine/messages/**</exclude>
                                 <exclude>com/payneteasy/firewall/redmine/model/**</exclude>

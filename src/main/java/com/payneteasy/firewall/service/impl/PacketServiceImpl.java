@@ -9,6 +9,7 @@ import com.payneteasy.firewall.service.IPacketService;
 import com.payneteasy.firewall.service.model.*;
 import com.payneteasy.firewall.util.Networks;
 import com.payneteasy.firewall.util.Strings;
+import com.payneteasy.firewall.util.Yamls;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -33,7 +34,7 @@ public class PacketServiceImpl implements IPacketService {
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setIndent(4);
         dumperOptions.setPrettyFlow(true);
-        yaml = new Yaml(dumperOptions);
+        yaml = Yamls.newYaml(dumperOptions);
     }
 
     @Override

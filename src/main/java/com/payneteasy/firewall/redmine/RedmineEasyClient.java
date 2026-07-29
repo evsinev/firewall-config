@@ -1,26 +1,38 @@
 package com.payneteasy.firewall.redmine;
 
-import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpMediaType;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestFactory;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.http.xml.XmlHttpContent;
-import com.google.api.client.xml.XmlNamespaceDictionary;
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
+import com.payneteasy.firewall.redmine.messages.RedmineWikiPageUpdateRequest;
+import com.payneteasy.firewall.redmine.model.RedmineWikiPage;
+import com.payneteasy.http.client.api.HttpHeader;
+import com.payneteasy.http.client.api.HttpHeaders;
+import com.payneteasy.http.client.api.HttpMethod;
+import com.payneteasy.http.client.api.HttpRequest;
+import com.payneteasy.http.client.api.HttpRequestParameters;
+import com.payneteasy.http.client.api.HttpResponse;
+import com.payneteasy.http.client.api.HttpTimeouts;
+import com.payneteasy.http.client.api.IHttpClient;
+import com.payneteasy.http.client.impl.HttpClientImpl;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+/**
+ * Pushes wiki pages into Redmine over its REST API.
+ *
+ * The page is sent as JSON (<code>PUT .../&lt;page&gt;.json</code>), the same format
+ * <code>redmine/impl/RedmineIssueClientImpl</code> uses for issues.
+ */
 public class RedmineEasyClient implements IRedmineClient {
 
     final class TrustAllTrustManager implements X509TrustManager {
@@ -38,14 +50,17 @@ public class RedmineEasyClient implements IRedmineClient {
             return null;
         }
     }
-    
+
     private static String normalizePageName(String pageName) {
         Preconditions.checkNotNull(pageName, "page name");
-        return pageName.replaceAll("\\.", "_") + ".xml";
+        return pageName.replaceAll("\\.", "_") + ".json";
     }
-    
-    private final HttpRequestFactory requestFactory;
-    private final String url;
+
+    private final IHttpClient           httpClient = new HttpClientImpl();
+    private final Gson                  gson       = new Gson();
+    private final HttpHeaders           headers;
+    private final HttpRequestParameters params;
+    private final String                url;
 
     public RedmineEasyClient(String url, String apiKey) throws NoSuchAlgorithmException, KeyManagementException {
         Preconditions.checkNotNull(url, "url");
@@ -53,68 +68,61 @@ public class RedmineEasyClient implements IRedmineClient {
         Preconditions.checkNotNull(apiKey, "apiKey");
         Preconditions.checkArgument(apiKey.length() > 0, "illegal apiKey value <%s>", apiKey);
 
-        SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-        sslContext.init(null, new TrustManager[] {new TrustAllTrustManager()}, null);
-        HttpTransport transport = new NetHttpTransport.Builder().setSslSocketFactory(sslContext.getSocketFactory()).build();
-        this.requestFactory = transport.createRequestFactory(new RedmineHttpRequestInitializer(apiKey));
+        HttpRequestParameters.HttpRequestParametersBuilder parameters = HttpRequestParameters.builder()
+                .timeouts(new HttpTimeouts(10_000, 30_000));
+
+        // Only for https: HttpClientImpl throws if a socket factory or a hostname verifier
+        // is set on a plain http connection, and MainWiki accepts any url starting with
+        // "http". When we do speak TLS the certificate is deliberately not verified - see
+        // the Security section of the docs.
+        if (url.toLowerCase().startsWith("https")) {
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
+            sslContext.init(null, new TrustManager[] {new TrustAllTrustManager()}, null);
+            parameters.sslSocketFactory(sslContext.getSocketFactory())
+                      .hostnameVerifier((hostname, session) -> true);
+        }
+
+        this.params = parameters.build();
+
+        this.headers = new HttpHeaders(
+                Arrays.asList(
+                        new HttpHeader("X-Redmine-API-Key", apiKey)
+                        , new HttpHeader("Content-Type", "application/json")
+                )
+        );
+
         this.url = url;
     }
 
-    public final void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment) throws IOException {
-        execute(pageName, title, text, comment, null);
+    /** The title is ignored: a Redmine wiki page is titled by its name. */
+    @Override public final void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment) throws IOException {
+        execute(pageName, text, comment, null);
     }
 
-    private void executeDeletePage(String pageName) throws IOException {
-        pageName = normalizePageName(pageName);
-
-        GenericUrl genericUrl = new GenericUrl(url);
-        genericUrl.getPathParts().add(pageName);
-        HttpRequest httpRequest = requestFactory.buildDeleteRequest(genericUrl);
-        HttpResponse response = httpRequest.execute();
-        if (response.getStatusCode() != 200) {
-            throw new IOException("Cannot delete page <" + pageName + ">. "
-                    + "Response [statusCode: " + response.getStatusCode() + "; statusMessage: " + response.getStatusMessage());
-        }
-    }
-
-    private void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment, Integer version) throws IOException {
-        execute(pageName, title, text, comment, version);
-    }
-
-    private boolean executeIsPageExists(String pageName) throws IOException {
-        pageName = normalizePageName(pageName);
-        
-        GenericUrl genericUrl = new GenericUrl(url);
-        genericUrl.getPathParts().add(pageName);
-        HttpRequest httpRequest = requestFactory.buildGetRequest(genericUrl);
-        httpRequest.setThrowExceptionOnExecuteError(false);
-        return httpRequest.execute().isSuccessStatusCode();
-    }
-    
-    public void execute(String pageName, String title, String text, String comment, Integer version) throws IOException {
-        pageName = normalizePageName(pageName);
+    public void execute(String pageName, String text, String comment, Integer version) throws IOException {
+        String normalizedPageName = normalizePageName(pageName);
+        String pageUrl            = url.endsWith("/") ? url + normalizedPageName : url + "/" + normalizedPageName;
 
         long startTime = System.currentTimeMillis();
-        System.out.print(pageName + " ... ");
-        
-        WikiPageXml wikiPageXml = new WikiPageXml();
-        wikiPageXml.setComments(comment);
-        wikiPageXml.setText(text);
-        wikiPageXml.setVersion(version);
+        System.out.print(normalizedPageName + " ... ");
 
-        XmlNamespaceDictionary xmlNamespaceDictionary = new XmlNamespaceDictionary();
-        xmlNamespaceDictionary.set("", "");
-        XmlHttpContent httpContent = new XmlHttpContent(xmlNamespaceDictionary, "wiki_page", wikiPageXml);
-        httpContent.setMediaType(new HttpMediaType("application", "xml"));
-        System.out.println("httpContent = " + httpContent);
+        RedmineWikiPageUpdateRequest wikiPage = RedmineWikiPageUpdateRequest.builder()
+                .wikiPage(RedmineWikiPage.builder()
+                        .text(text)
+                        .comments(comment)
+                        .version(version)
+                        .build())
+                .build();
 
-        GenericUrl genericUrl = new GenericUrl(url);
-        genericUrl.getPathParts().add(pageName);
-        HttpRequest httpRequest = requestFactory.buildPutRequest(genericUrl, httpContent);
-        httpRequest.setCurlLoggingEnabled(true);
-        httpRequest.setLoggingEnabled(true);
+        HttpRequest request = HttpRequest.builder()
+                .url(pageUrl)
+                .method(HttpMethod.PUT)
+                .headers(headers)
+                .body(gson.toJson(wikiPage).getBytes(UTF_8))
+                .build();
 
-        HttpResponse response = httpRequest.execute();
+        HttpResponse response = sendHttp(request, pageUrl);
+
         switch (response.getStatusCode()) {
             case 200:
             case 201:
@@ -123,16 +131,29 @@ public class RedmineEasyClient implements IRedmineClient {
                 break;
 
             case 409:
-                throw new IOException("Conflict: occurs when trying to update a stale page. "
-                        + "Response [statusCode: " + response.getStatusCode() + "; statusMessage: " + response.getStatusMessage());
+                throw new IOException("Conflict: occurs when trying to update a stale page."
+                        + describe(pageUrl, response));
+
             case 422:
-                throw new IOException("Unprocessable Entity: page was not saved due to validation failures "
-                        + "(response body contains the error messages)"
-                        + "Response [statusCode: " + response.getStatusCode() + "; statusMessage: " + response.getStatusMessage());
+                throw new IOException("Unprocessable Entity: page was not saved due to validation failures."
+                        + describe(pageUrl, response));
 
             default:
-                // do nothing
-                throw new IllegalStateException("Unknown error: "+response.getStatusCode()+" : "+response.getStatusMessage());
+                throw new IllegalStateException("Unknown error." + describe(pageUrl, response));
         }
+    }
+
+    private HttpResponse sendHttp(HttpRequest aRequest, String aUrl) throws IOException {
+        try {
+            return httpClient.send(aRequest, params);
+        } catch (Exception e) {
+            throw new IOException("Cannot send request to " + aUrl, e);
+        }
+    }
+
+    private static String describe(String aUrl, HttpResponse aResponse) {
+        return "\n\n    Url           : " + aUrl
+                + "\n\n    Status        : " + aResponse.getStatusCode() + " " + aResponse.getReasonPhrase()
+                + "\n\n    Response body : " + new String(aResponse.getBody(), UTF_8);
     }
 }

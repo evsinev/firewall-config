@@ -100,7 +100,7 @@ Nothing in stages 1–2 knows about output formats. Four rendering mechanisms si
 | Velocity | `iptables.vm` | the rule sets |
 | Mustache | `nwdiag`, `bind-zone`, `bind-reverse-zone`, `bind-zones-conf`, `keepalived`, `mikrotik`, `host-labels.html`, `ethernet-labels.html` | everything textual |
 | `ICanvas` | — | the L2 diagram, with `SwingCanvas` used for the editor, PNG and SVG alike |
-| Redmine clients | textile built in `WikiServiceImpl` | wiki pages (XML API) and issues (JSON API) |
+| Redmine clients | textile built in `WikiServiceImpl` | wiki pages and issues, both over Redmine's JSON API |
 
 `ICanvas` is worth noting: the same painting code drives the interactive editor, `ImageIO` and JFreeSVG,
 which is why the SVG matches what you arranged on screen.
@@ -119,10 +119,10 @@ which is why the SVG matches what you arranged on screen.
 | `.l3` | `CreateL3Diagram` |
 | `.l2`, `.l2.editor*` | The L2 graph, its Swing editor, the canvas abstraction, position managers |
 | `.l2.labels.wire` | Patch-cord label SVG composition |
-| `.redmine`, `.redmine.impl` | Wiki client (XML), issue client (JSON), file-store client |
+| `.redmine`, `.redmine.impl` | Wiki client, issue client, file-store client — the two HTTP ones on `com.payneteasy.http-client` |
 | `.podmancheck` | podman-security-bench result model and Redmine issue creation |
 | `.critsoft` | Software-card parsing and the critical-software table |
-| `.util` | `Networks` (/24 arithmetic), `Strings`, `VelocityBuilder`, `MustacheFilePrinter`, `ShellFilePrinter` |
+| `.util` | `Networks` (/24 arithmetic), `Strings`, `Yamls` (the only place a snakeyaml `Yaml` is built), `VelocityBuilder`, `MustacheFilePrinter`, `ShellFilePrinter` |
 
 ## Design consequences
 

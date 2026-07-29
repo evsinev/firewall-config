@@ -4,7 +4,7 @@ import com.payneteasy.firewall.dao.model.*;
 import com.payneteasy.firewall.service.ConfigurationException;
 import com.payneteasy.firewall.service.model.Access;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ public interface IConfigDao {
 
     TProtocols listProtocols();
 
-    void persistPagesHistory() throws FileNotFoundException;
+    void persistPagesHistory() throws IOException;
 
     String resolveDns(String aName) throws ConfigurationException;
 

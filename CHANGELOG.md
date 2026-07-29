@@ -40,6 +40,41 @@ jar and publishes it as `firewall-config-1.2.0.jar`
   `maven-surefire-plugin` pinned to 2.22.2 and run with `java.awt.headless=true`.
 - `VelocityBuilderTest` and `YamlTest`, which printed to stdout and asserted nothing, were
   rewritten with assertions and moved to the packages of the classes they cover.
+- **The Redmine wiki client now speaks JSON, not XML.** `RedmineEasyClient` was rewritten on
+  `com.payneteasy.http-client` (the stack the issue client already used) and sends one
+  `PUT <wiki-url>/<page>.json`. It reports the response body on a `409`/`422` instead of only the
+  status line. Trust-all TLS is unchanged, but is now applied only to `https://` urls — a plain
+  `http://` Redmine used to work by accident and would otherwise have started failing.
+- `IConfigDao.persistPagesHistory()` throws `IOException` rather than `FileNotFoundException`
+  (it closes the writer through try-with-resources now).
+
+### Security
+
+- **Every dependency with a known CVE was updated**, and the whole `google-http-client` chain —
+  the largest source of them — was removed:
+
+  | Dependency | Change | Closes |
+  |---|---|---|
+  | `snakeyaml` | 1.11 → 2.4 | CVE-2022-1471 (RCE via `Constructor`), CVE-2017-18640, CVE-2022-38749…38752 |
+  | `velocity` 1.7 → `velocity-engine-core` 2.4.1 | new artifact | CVE-2020-13936, plus `commons-collections` 3.2.1 and `commons-lang` 2.4 dropped |
+  | `guava` | 13.0.1 → 33.6.0-jre | CVE-2018-10237, CVE-2020-8908, CVE-2023-2976 |
+  | `google-http-client` 1.13.1-beta | **removed** | with it `httpclient` 4.0.1 (CVE-2012-6153, CVE-2014-3577, CVE-2020-13956), `guava-jdk5` 13.0, `commons-codec` 1.3, `commons-logging` 1.1.1, `xpp3`, `jsr305` 1.3.9 |
+  | `commons-lang3` | 3.7 → 3.20.0 | CVE-2025-48924 |
+
+  `gson` 2.11.0 → 2.14.0, `picocli` 4.6.2 → 4.7.7, `lombok` 1.18.32 → 1.18.46, mustache
+  `compiler` 0.9.0 → 0.9.14 and `jfreesvg` 3.2 → 3.4.4 came along for hygiene. Every version is
+  the newest that still targets Java 8. `slf4j-nop` is new, to keep Velocity 2 quiet.
+
+  The generated output is byte-for-byte unchanged: all golden files still match, including from
+  the fat jar, and `pages_history.yml` round-trips in the same format.
+- **Dependabot** is enabled for maven, npm (`website/`) and the pinned GitHub Actions
+  (`.github/dependabot.yml`), weekly, with minor and patch updates grouped. Major bumps that would
+  break Java 8 (`jfreesvg` 4.x) or the JUnit 4 requirement are ignored.
+- Velocity 2 needs `parser.allow_hyphen_in_identifiers` because every `iptables.vm` context key is
+  hyphenated, and `parser.space_gobbling=bc` to keep the 1.7 whitespace. Both are set in
+  `VelocityBuilder` and are load-bearing.
+- snakeyaml 2.x refuses global `!!com.foo` tags, which `pages_history.yml` uses. Every `Yaml` is now
+  built by the new `util/Yamls`, which allows exactly the `com.payneteasy.firewall.` prefix.
 
 ## [1.2.0] — 2026-07-29
 

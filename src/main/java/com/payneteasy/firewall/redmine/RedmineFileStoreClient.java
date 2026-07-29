@@ -20,6 +20,6 @@ public class RedmineFileStoreClient implements IRedmineClient {
 
     @Override
     public void executeCreateOrUpdateWikiPage(String pageName, String title, String text, String comment) throws IOException {
-        Files.write(text, new File(dir, pageName+".wiki"), Charset.defaultCharset());
+        Files.asCharSink(new File(dir, pageName+".wiki"), Charset.defaultCharset()).write(text);
     }
 }

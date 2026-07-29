@@ -16,10 +16,14 @@ public class VelocityBuilder {
 
     public VelocityBuilder() {
         Properties p = new Properties();
-        p.setProperty("resource.loader", "class");
-        p.setProperty("class.resource.loader.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
-        p.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.Log4JLogChute");
-        p.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
+        p.setProperty("resource.loaders", "class");
+        p.setProperty("resource.loader.class.class", "org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader");
+        // iptables.vm reads $blocked-ip-addresses, $input-packets, $custom-input-rules ...
+        // Velocity 2 rejects the hyphen in an identifier unless this is on, and it fails
+        // by rendering the reference literally, not by throwing. See Main.
+        p.setProperty("parser.allow_hyphen_in_identifiers", "true");
+        // 2.x defaults to "lines"; "bc" is the 1.7 behaviour the golden files were made with
+        p.setProperty("parser.space_gobbling", "bc");
 
         theEngine = new VelocityEngine(p);
 
