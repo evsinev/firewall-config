@@ -20,7 +20,7 @@ The fat jar is the only delivery form — nothing is published to a Maven reposi
 
 ## Verify a change
 
-**The gate is `./mvnw clean verify`** — 208 tests plus a JaCoCo rule that fails the build below
+**The gate is `./mvnw clean verify`** — 210 tests plus a JaCoCo rule that fails the build below
 **80% line coverage**. The measured bundle excludes the Swing editor, the Redmine clients,
 `podmancheck`, `CommandProcess` and thirteen CLI shims (~31% of the tree); the list is in
 `pom.xml`, one comment per entry. Adding a new CLI means either testing it or adding it there.

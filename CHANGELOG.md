@@ -36,8 +36,8 @@ jar and publishes it as `firewall-config-1.2.0.jar`
 - CI and the release workflow run `clean verify` instead of `clean package`, so the coverage
   gate actually runs. The fat jar is still produced by `package` and the demo-network sweep is
   unchanged.
-- junit 4.10 → 4.13.2 (for `assertThrows` and hamcrest-core 1.3) plus `hamcrest-library`;
-  `maven-surefire-plugin` pinned to 2.22.2 and run with `java.awt.headless=true`.
+- junit 4.10 → 4.13.2 (for `assertThrows`) plus `org.hamcrest:hamcrest`;
+  `maven-surefire-plugin` pinned and run with `java.awt.headless=true`.
 - `VelocityBuilderTest` and `YamlTest`, which printed to stdout and asserted nothing, were
   rewritten with assertions and moved to the packages of the classes they cover.
 - **The Redmine wiki client now speaks JSON, not XML.** `RedmineEasyClient` was rewritten on
@@ -47,6 +47,21 @@ jar and publishes it as `firewall-config-1.2.0.jar`
   `http://` Redmine used to work by accident and would otherwise have started failing.
 - `IConfigDao.persistPagesHistory()` throws `IOException` rather than `FileNotFoundException`
   (it closes the writer through try-with-resources now).
+- **The bundled Maven wrapper moved 3.5.2 (2017) → 3.9.16.** It was the reason every modern build
+  plugin was unusable: `maven-assembly-plugin` 3.8.0 and `maven-surefire-plugin` 3.5.6 both refuse to
+  run below Maven 3.6.3. It also changes the super-POM defaults for the three plugins pinned nowhere
+  in `pom.xml` — `maven-compiler-plugin` 3.1 → 3.13.0, `maven-jar-plugin` 2.4 → 3.4.1,
+  `maven-resources-plugin` 2.6 → 3.3.1. 3.9.16 is the ceiling: Maven 4 requires Java 17.
+- The first round of Dependabot updates landed: `snakeyaml` 2.4 → 2.6, `maven-assembly-plugin`
+  3.3.0 → 3.8.0, `jacoco-maven-plugin` 0.8.12 → 0.8.15, `maven-surefire-plugin` 2.22.2 → 3.5.6, and
+  `actions/checkout` → v7.0.1. The golden files, the 210 tests and the `pages_history.yml` dump
+  format are all unchanged, and the JaCoCo bundle still measures the same 83 classes — worth
+  checking, because a surefire major bump is exactly what could have silently dropped the
+  jacoco `argLine` and taken coverage to zero.
+- `hamcrest-library` 1.3 → `org.hamcrest:hamcrest` 3.0, with `hamcrest-core` excluded from junit so
+  the `org.hamcrest.*` classes are not on the test classpath in two versions at once. Since
+  hamcrest 2.x the `-library` and `-core` artifacts are empty stubs, so bumping `hamcrest-library`
+  on its own cannot compile. No test file changed.
 
 ### Security
 
@@ -69,7 +84,11 @@ jar and publishes it as `firewall-config-1.2.0.jar`
   the fat jar, and `pages_history.yml` round-trips in the same format.
 - **Dependabot** is enabled for maven, npm (`website/`) and the pinned GitHub Actions
   (`.github/dependabot.yml`), weekly, with minor and patch updates grouped. Major bumps that would
-  break Java 8 (`jfreesvg` 4.x) or the JUnit 4 requirement are ignored.
+  break Java 8 (`jfreesvg` 4.x) or the JUnit 4 requirement are ignored, and so is `slf4j-nop`:
+  it exists only to silence Velocity, so it has to match the `slf4j-api` that
+  `velocity-engine-core` brings in (1.7.36). slf4j 2.x finds its provider through `ServiceLoader`,
+  which the 1.7 api never calls — a 2.x nop would sit on the classpath silencing nothing, with a
+  green build throughout.
 - Velocity 2 needs `parser.allow_hyphen_in_identifiers` because every `iptables.vm` context key is
   hyphenated, and `parser.space_gobbling=bc` to keep the 1.7 whitespace. Both are set in
   `VelocityBuilder` and are load-bearing.
