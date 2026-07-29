@@ -8,6 +8,14 @@
     <name>firewall-config</name>
     <url>http://maven.apache.org</url>
 
+    <properties>
+        <!-- Line coverage of the measured bundle (see the jacoco excludes below).
+             This is NOT whole-tree coverage: ~31% of src/main/java is a Swing
+             editor, trust-all-TLS HTTP clients, Runtime.exec("nwdiag") and CLI
+             shims with System.exit, all excluded from the denominator. -->
+        <jacoco.line.minimum>0.80</jacoco.line.minimum>
+    </properties>
+
     <repositories>
         <repository>
             <id>pne</id>
@@ -18,10 +26,21 @@
 
     <dependencies>
 
+        <!-- 4.13 is the first 4.x with assertThrows; the long multi-line
+             ConfigurationException messages are part of the product, so the
+             tests assert on the message text, not just the exception type. -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.10</version>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- junit only brings hamcrest-core; hasSize/hasItem/hasEntry live here -->
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>1.3</version>
             <scope>test</scope>
         </dependency>
 
@@ -130,6 +149,137 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
+                <configuration>
+                    <!-- Never set <argLine> here: it silently replaces the one
+                         jacoco:prepare-agent injects and coverage drops to 0%. -->
+                    <systemPropertyVariables>
+                        <!-- the l2 model uses java.awt.Color/Point/Rectangle -->
+                        <java.awt.headless>true</java.awt.headless>
+                        <!-- so tests can find examples/demo-network from an IDE too -->
+                        <basedir>${project.basedir}</basedir>
+                    </systemPropertyVariables>
+                    <!-- No parallel/forkCount: CreateL3Diagram writes the fixed
+                         target/network.diag and the golden tests swap System.out. -->
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <!-- deliberately no <excludes>: this goal takes VM names
+                             (com.foo.*), not paths, so a path list does nothing -->
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <excludes>
+                                <!-- Not unit-testable, and excluded from the coverage
+                                     denominator on purpose. Adding a new CLI means
+                                     either testing it or adding it here. -->
+
+                                <!-- Swing: JFrame, KeyListener, mouse drag -->
+                                <exclude>com/payneteasy/firewall/l2/editor/L2Editor*</exclude>
+                                <exclude>com/payneteasy/firewall/l2/editor/graphics/Swing*</exclude>
+                                <exclude>com/payneteasy/firewall/l2/editor/actions/MouseMovementListener*</exclude>
+                                <!-- only reachable from MainL2WireLabels -->
+                                <exclude>com/payneteasy/firewall/l2/labels/**</exclude>
+
+                                <!-- network, and a trust-all X509TrustManager -->
+                                <exclude>com/payneteasy/firewall/redmine/RedmineEasyClient*</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/RedmineHttpRequestInitializer*</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/WikiPageXml*</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/impl/**</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/messages/**</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/model/**</exclude>
+                                <exclude>com/payneteasy/firewall/podmancheck/**</exclude>
+
+                                <!-- hard-codes Runtime.exec("nwdiag ...") -->
+                                <exclude>com/payneteasy/firewall/util/CommandProcess*</exclude>
+                                <!-- System.exit + network -->
+                                <exclude>com/payneteasy/firewall/critsoft/CritSoftCollectorMain*</exclude>
+
+                                <!-- CLI shims: System.exit and/or Swing and/or fixed
+                                     CWD-relative output paths. Main, MainBind,
+                                     MainKeepalived, MainMikrotik, MainWiki and
+                                     MainL3Diagram are NOT here - they are tested. -->
+                                <exclude>com/payneteasy/firewall/MainL2*</exclude>
+                                <exclude>com/payneteasy/firewall/MainPodmanCheck*</exclude>
+                                <exclude>com/payneteasy/firewall/MainWikiDir*</exclude>
+                                <exclude>com/payneteasy/firewall/MainHostLabels*</exclude>
+                                <exclude>com/payneteasy/firewall/MainLinuxNetworkScript*</exclude>
+                                <exclude>com/payneteasy/firewall/MainUbuntuBaseSetup*</exclude>
+                                <exclude>com/payneteasy/firewall/MainExternalServices*</exclude>
+                                <exclude>com/payneteasy/firewall/MainPacketsGraphviz*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jacoco-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <haltOnFailure>true</haltOnFailure>
+                            <rules>
+                                <rule>
+                                    <!-- LINE, not BRANCH: the SNAT decision in
+                                         PacketServiceImpl is one 16-term || on a
+                                         single line, i.e. 32 branches no fixture
+                                         can cover. Not CLASS/METHOD either: dozens
+                                         of getters exist only for Velocity. -->
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${jacoco.line.minimum}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <excludes>
+                                <exclude>com/payneteasy/firewall/l2/editor/L2Editor*</exclude>
+                                <exclude>com/payneteasy/firewall/l2/editor/graphics/Swing*</exclude>
+                                <exclude>com/payneteasy/firewall/l2/editor/actions/MouseMovementListener*</exclude>
+                                <exclude>com/payneteasy/firewall/l2/labels/**</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/RedmineEasyClient*</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/RedmineHttpRequestInitializer*</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/WikiPageXml*</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/impl/**</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/messages/**</exclude>
+                                <exclude>com/payneteasy/firewall/redmine/model/**</exclude>
+                                <exclude>com/payneteasy/firewall/podmancheck/**</exclude>
+                                <exclude>com/payneteasy/firewall/util/CommandProcess*</exclude>
+                                <exclude>com/payneteasy/firewall/critsoft/CritSoftCollectorMain*</exclude>
+                                <exclude>com/payneteasy/firewall/MainL2*</exclude>
+                                <exclude>com/payneteasy/firewall/MainPodmanCheck*</exclude>
+                                <exclude>com/payneteasy/firewall/MainWikiDir*</exclude>
+                                <exclude>com/payneteasy/firewall/MainHostLabels*</exclude>
+                                <exclude>com/payneteasy/firewall/MainLinuxNetworkScript*</exclude>
+                                <exclude>com/payneteasy/firewall/MainUbuntuBaseSetup*</exclude>
+                                <exclude>com/payneteasy/firewall/MainExternalServices*</exclude>
+                                <exclude>com/payneteasy/firewall/MainPacketsGraphviz*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
