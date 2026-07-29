@@ -19,6 +19,12 @@ updates:
       # jfreesvg 4.x needs Java 11 and moves SVGGraphics2D to org.jfree.svg.
       - dependency-name: org.jfree:jfreesvg
         update-types: [version-update:semver-major]
+      # slf4j-nop is here only to silence Velocity, so it has to match the slf4j-api
+      # that velocity-engine-core brings in (1.7.36). slf4j 2.x finds its provider
+      # through ServiceLoader, which the 1.7 api never calls - a 2.x nop would sit on
+      # the classpath and silence nothing, with a green build. Bump it with Velocity.
+      - dependency-name: org.slf4j:slf4j-nop
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
     directory: /website
