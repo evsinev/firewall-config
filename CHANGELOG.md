@@ -11,6 +11,14 @@ jar and publishes it as `firewall-config-1.2.0.jar`
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-07-29
+
+The SNAT hot fix is gone. Destinations that must be translated even though their address is private
+— partners reached over tunnels — are declared in the description now, not in Java.
+
+**Read the Removed section before upgrading.** This release changes the generated rules for any
+description that relied on the removed address list, and it does so silently.
+
 ### Added
 
 - **`external_peer: true` on a host.** Declares that the host is outside our address space even
@@ -18,6 +26,8 @@ jar and publishes it as `firewall-config-1.2.0.jar`
   SNAT-ed to the service's `nat:` address, exactly as for a public destination. The flag is read on
   the destination side only; as a source such a host stays private and produces no DNAT.
   `examples/demo-network` gained `partner-vpn.example.com` to exercise it.
+- **The fat jar as a build artifact.** Every `Build` run — including a pull request's — now uploads
+  `target/firewall-config.jar`, so a jar can be picked up from the run page without cutting a tag.
 
 ### Removed
 
@@ -248,6 +258,7 @@ Covers the project from its first commit in January 2013.
 - **Diagrams and switch configuration**: L1 and L2 diagrams, Mikrotik trunk configuration
   (`MainMikrotik`), CentOS network interface scripts, per-host colours and `ipmi_ip`.
 
+[1.4.0]: https://github.com/evsinev/firewall-config/releases/tag/1.4.0
 [1.3.0]: https://github.com/evsinev/firewall-config/releases/tag/1.3.0
 [1.2.0]: https://github.com/evsinev/firewall-config/releases/tag/1.2.0
 [1.1-1]: https://github.com/evsinev/firewall-config/releases/tag/1.1-1
