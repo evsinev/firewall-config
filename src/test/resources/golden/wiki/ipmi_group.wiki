@@ -1,0 +1,4 @@
+h2. ipmi group
+
+|_.Host|_.IP address|_.Description|_.Justification|
+|[[sw-core-1 details|sw-core-1]]|10.20.6.2|Core switch|L2 switching for all VLANs|

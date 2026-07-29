@@ -1,0 +1,20 @@
+
+h2. Interfaces
+
+|_.Name|_.IP|_.Virtual IPs|_.DNS|
+|vlan-mgmt|10.20.6.2|||
+|ether1|skip|||
+|ether2|skip|||
+|ether3|skip|||
+|ether4|skip|||
+|ether5|skip|||
+|ether6|skip|||
+|ether7|skip|||
+|ether8|skip|||
+|ether9|skip|||
+|ether10|skip|||
+
+h2. Services and input packets
+
+|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|
+|ssh:ssh|vlan-mgmt|10.20.6.2|22|[[adm-1 details|adm-1]] |Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|

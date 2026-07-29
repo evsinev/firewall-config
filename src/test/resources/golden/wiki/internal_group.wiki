@@ -1,0 +1,9 @@
+h2. internal group
+
+|_.Host|_.IP address|_.Description|_.Justification|
+|[[fw-2 details|fw-2]]|10.20.20.12|Perimeter firewall, backup|VRRP peer of fw-1; takes over every virtual address if fw-1 fails|
+|[[fw-1 details|fw-1]]|10.20.20.11|Perimeter firewall, master|Controls all traffic between the internet, the DMZ and the internal networks|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|DMZ egress proxy and internal resolver|The only host allowed to open connections towards the internet|
+|[[adm-1 details|adm-1]]|10.20.20.31|Administrative jump host and monitoring server|Single controlled entry point for administration; runs Prometheus|
+|[[db-1 details|db-1]]|10.20.22.21|Primary PostgreSQL server|Stores customer and transaction data|
+|[[web-1 details|web-1]]|10.20.20.21|Customer-facing web application|Primary business service|

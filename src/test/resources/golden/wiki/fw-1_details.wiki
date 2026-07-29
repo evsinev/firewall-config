@@ -1,0 +1,9 @@
+h1. fw-1
+
+Perimeter firewall, master
+
+h2. Business goal
+
+Controls all traffic between the internet, the DMZ and the internal networks
+{{include(fw-1_packets)}}
+{{include(fw-1_run)}}

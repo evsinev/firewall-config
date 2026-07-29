@@ -1,0 +1,3 @@
+21     1D    IN      PTR     db-1.demo.example.com.
+11     1D    IN      PTR     fw-1.demo.example.com.
+12     1D    IN      PTR     fw-2.demo.example.com.

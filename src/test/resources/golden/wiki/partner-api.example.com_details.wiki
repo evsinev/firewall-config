@@ -1,0 +1,8 @@
+h1. partner-api.example.com
+
+Partner settlement API
+
+h2. Business goal
+
+Outgoing settlement requests and incoming callbacks
+{{include(partner-api_example_com_packets)}}

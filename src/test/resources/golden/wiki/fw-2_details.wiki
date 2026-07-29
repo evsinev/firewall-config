@@ -1,0 +1,9 @@
+h1. fw-2
+
+Perimeter firewall, backup
+
+h2. Business goal
+
+VRRP peer of fw-1; takes over every virtual address if fw-1 fails
+{{include(fw-2_packets)}}
+{{include(fw-2_run)}}

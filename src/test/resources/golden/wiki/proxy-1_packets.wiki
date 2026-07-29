@@ -1,0 +1,20 @@
+
+h2. Interfaces
+
+|_.Name|_.IP|_.Virtual IPs|_.DNS|
+|eth0|10.20.2.21|||
+|ipmi|skip|||
+
+h2. Services and input packets
+
+|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|
+|dns:internal-dns|eth0|10.20.2.21|53|[[adm-1 details|adm-1]] [[db-1 details|db-1]] [[fw-1 details|fw-1]] [[fw-2 details|fw-2]] [[proxy-1 details|proxy-1]] [[web-1 details|web-1]] |Recursive resolver for the whole estate|Name resolution without exposing internal names outside|
+|ssh:ssh|eth0|10.20.2.21|22|[[adm-1 details|adm-1]] |Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|proxy:egress-proxy|eth0|10.20.2.21|3128|[[adm-1 details|adm-1]] [[web-1 details|web-1:web-app]] |Forward proxy for outgoing HTTPS callbacks|Applications must not reach the internet directly|
+|node-exporter:node-exporter|eth0|10.20.2.21|9100|[[adm-1 details|adm-1]] |Prometheus node metrics endpoint|Capacity and availability monitoring|
+
+h2. Output packets
+
+|_.Remote hostname|_.Remote ip address|_.Protocol|_.Port|_.Service name|_.Description|_.Justification|
+|[[partner-api_example_com details|partner-api.example.com]]|198.51.100.50|tcp partner-api|443|https|Partner settlement API|The proxy submits settlement requests on behalf of the application|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|udp internal-dns|53|dns|Recursive resolver for the whole estate|Name resolution without exposing internal names outside|

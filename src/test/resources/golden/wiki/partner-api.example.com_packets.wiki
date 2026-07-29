@@ -1,0 +1,15 @@
+
+h2. Interfaces
+
+|_.Name|_.IP|_.Virtual IPs|_.DNS|
+|eth0|198.51.100.50|||
+
+h2. Services and input packets
+
+|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|
+|https:partner-api|eth0|198.51.100.50|443|[[proxy-1 details|proxy-1]] |Partner settlement API|The proxy submits settlement requests on behalf of the application|
+
+h2. Output packets
+
+|_.Remote hostname|_.Remote ip address|_.Protocol|_.Port|_.Service name|_.Description|_.Justification|
+|[[web-1 details|web-1]]|10.20.20.21|tcp web-app|443|https|Customer-facing web application|Primary business service|

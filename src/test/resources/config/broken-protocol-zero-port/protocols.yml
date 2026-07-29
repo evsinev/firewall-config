@@ -1,0 +1,4 @@
+protocols:
+
+- name:     ssh
+  protocol: tcp

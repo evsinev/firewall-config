@@ -1,0 +1,9 @@
+h1. web-1
+
+Customer-facing web application
+
+h2. Business goal
+
+Primary business service
+{{include(web-1_packets)}}
+{{include(web-1_run)}}

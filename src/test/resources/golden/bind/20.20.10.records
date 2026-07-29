@@ -1,0 +1,4 @@
+31     1D    IN      PTR     adm-1.demo.example.com.
+11     1D    IN      PTR     fw-1.demo.example.com.
+12     1D    IN      PTR     fw-2.demo.example.com.
+21     1D    IN      PTR     web-1.demo.example.com.

@@ -1,0 +1,22 @@
+description:   Minimal fixture host A
+justification: Owns the shared ssh service definition
+color:         "0xB2DFDB"
+
+gw: 10.30.1.1
+
+interfaces:
+
+- name: eth0
+  ip:   10.30.1.10
+  dns:  srv-a.example.test
+
+- name: ipmi
+  ip:   skip
+
+services:
+
+- url:           ssh
+  name:          ssh
+  description:   Administrative SSH access
+  justification: Encrypted administrative access
+  access:        [srv-b]

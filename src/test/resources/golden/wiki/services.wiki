@@ -1,0 +1,13 @@
+
+h2. Services
+
+|_.Name|_.Program|_.Protocol|_.Port|_.Description|_.Justification|
+|dns|unbound|udp|53|Domain Name System|Name resolution for internal hosts|
+|http|nginx|tcp|80|HTTP|Web access|
+|https|nginx|tcp|443|HTTP over TLS|Encrypted web access|
+|node-exporter|node_exporter|tcp|9100|Prometheus node metrics|Capacity and availability monitoring|
+|ntp|chronyd|udp|123|Network Time Protocol|Clock synchronisation across the estate|
+|postgres|postgres|tcp|5432|PostgreSQL wire protocol|Application access to the database|
+|prometheus|prometheus|tcp|9090|Prometheus web UI and API|Operators read dashboards and alerts|
+|proxy|squid|tcp|3128|Forward HTTP proxy|Single controlled egress point to the internet|
+|ssh|sshd|tcp|22|Secure Shell|Encrypted administrative access|

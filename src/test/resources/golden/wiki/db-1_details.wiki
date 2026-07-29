@@ -1,0 +1,9 @@
+h1. db-1
+
+Primary PostgreSQL server
+
+h2. Business goal
+
+Stores customer and transaction data
+{{include(db-1_packets)}}
+{{include(db-1_run)}}

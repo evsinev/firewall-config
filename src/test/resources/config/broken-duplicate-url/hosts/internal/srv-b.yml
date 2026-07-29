@@ -1,0 +1,13 @@
+gw: 10.30.1.1
+
+interfaces:
+
+- name: eth0
+  ip:   10.30.1.11
+
+services:
+
+- url:    ssh
+  access: [srv-a]
+
+services_links: ssh

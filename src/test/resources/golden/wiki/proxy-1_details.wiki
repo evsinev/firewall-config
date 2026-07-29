@@ -1,0 +1,9 @@
+h1. proxy-1
+
+DMZ egress proxy and internal resolver
+
+h2. Business goal
+
+The only host allowed to open connections towards the internet
+{{include(proxy-1_packets)}}
+{{include(proxy-1_run)}}

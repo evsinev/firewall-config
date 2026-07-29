@@ -1,0 +1,9 @@
+h1. sw-core-1
+
+Core switch
+
+h2. Business goal
+
+L2 switching for all VLANs
+{{include(sw-core-1_packets)}}
+{{include(sw-core-1_run)}}

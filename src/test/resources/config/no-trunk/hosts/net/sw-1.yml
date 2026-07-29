@@ -1,0 +1,11 @@
+gw: 10.30.1.1
+
+interfaces:
+
+- name: vlan-mgmt
+  ip:   10.30.1.2
+
+- name: ether1
+  ip:   skip
+  port: 1
+  vlan: 201

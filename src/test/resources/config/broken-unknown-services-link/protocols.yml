@@ -1,0 +1,15 @@
+protocols:
+
+- name:          ssh
+  protocol:      tcp
+  port:          22
+  program:       sshd
+  description:   Secure Shell
+  justification: Encrypted administrative access
+
+- name:          http
+  protocol:      tcp
+  port:          80
+  program:       nginx
+  description:   HTTP
+  justification: Web access

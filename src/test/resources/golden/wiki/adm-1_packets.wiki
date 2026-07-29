@@ -1,0 +1,35 @@
+
+h2. Interfaces
+
+|_.Name|_.IP|_.Virtual IPs|_.DNS|
+|eth0|10.20.20.31|||
+|ipmi|skip|||
+
+h2. Services and input packets
+
+|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|
+|prometheus:prometheus-ui|eth0|10.20.20.31|9090|[[adm-1 details|adm-1]] |Prometheus web UI|Operators read dashboards and acknowledge alerts|
+|ssh:ssh|eth0|10.20.20.31|22|[[adm-1 details|adm-1]] |Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|node-exporter:node-exporter|eth0|10.20.20.31|9100|[[adm-1 details|adm-1]] |Prometheus node metrics endpoint|Capacity and availability monitoring|
+
+h2. Output packets
+
+|_.Remote hostname|_.Remote ip address|_.Protocol|_.Port|_.Service name|_.Description|_.Justification|
+|[[adm-1 details|adm-1]]|10.20.20.31|tcp node-exporter|9100|node-exporter|Prometheus node metrics endpoint|Capacity and availability monitoring|
+|[[adm-1 details|adm-1]]|10.20.20.31|tcp prometheus-ui|9090|prometheus|Prometheus web UI|Operators read dashboards and acknowledge alerts|
+|[[adm-1 details|adm-1]]|10.20.20.31|tcp ssh|22|ssh|Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|[[db-1 details|db-1]]|10.20.22.21|tcp node-exporter|9100|node-exporter|Prometheus node metrics endpoint|Capacity and availability monitoring|
+|[[db-1 details|db-1]]|10.20.22.21|tcp main-db|5432|postgres|Primary PostgreSQL cluster|The web application stores transaction data here|
+|[[db-1 details|db-1]]|10.20.22.21|tcp ssh|22|ssh|Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|[[fw-1 details|fw-1]]|10.20.20.11|tcp node-exporter|9100|node-exporter|Prometheus node metrics endpoint|Capacity and availability monitoring|
+|[[fw-1 details|fw-1]]|10.20.20.11|tcp ssh|22|ssh|Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|[[fw-2 details|fw-2]]|10.20.20.12|tcp node-exporter|9100|node-exporter|Prometheus node metrics endpoint|Capacity and availability monitoring|
+|[[fw-2 details|fw-2]]|10.20.20.12|tcp ssh|22|ssh|Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|udp internal-dns|53|dns|Recursive resolver for the whole estate|Name resolution without exposing internal names outside|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|tcp node-exporter|9100|node-exporter|Prometheus node metrics endpoint|Capacity and availability monitoring|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|tcp egress-proxy|3128|proxy|Forward proxy for outgoing HTTPS callbacks|Applications must not reach the internet directly|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|tcp ssh|22|ssh|Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|[[sw-core-1 details|sw-core-1]]|10.20.6.2|tcp ssh|22|ssh|Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|[[web-1 details|web-1]]|10.20.20.21|tcp web-app|443|https|Customer-facing web application|Primary business service|
+|[[web-1 details|web-1]]|10.20.20.21|tcp node-exporter|9100|node-exporter|Prometheus node metrics endpoint|Capacity and availability monitoring|
+|[[web-1 details|web-1]]|10.20.20.21|tcp ssh|22|ssh|Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|

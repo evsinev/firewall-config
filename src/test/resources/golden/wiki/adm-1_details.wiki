@@ -1,0 +1,9 @@
+h1. adm-1
+
+Administrative jump host and monitoring server
+
+h2. Business goal
+
+Single controlled entry point for administration; runs Prometheus
+{{include(adm-1_packets)}}
+{{include(adm-1_run)}}

@@ -1,0 +1,40 @@
+
+h2. Interfaces
+
+|_.Name|_.IP|_.Virtual IPs|_.DNS|
+|eth0|skip|||
+|eth0.202|10.20.20.12|10.20.20.1||
+|eth0.201|10.20.2.12|10.20.2.1||
+|eth0.203|10.20.22.12|10.20.22.1||
+|eth0.206|10.20.6.12|10.20.6.1||
+|eth0.100|198.51.100.12|||
+|eth0.100||198.51.100.10|gw.demo.example.com|
+
+h2. Services and input packets
+
+|_.Service name|_.Bound interface|_.Interface address|_.Port|_.Accessed from|_.Description|_.Justification|
+|ssh:ssh|eth0.202|10.20.20.12|22|[[adm-1 details|adm-1]] |Administrative SSH access|PCI DSS 2.3 - all administrative access is encrypted|
+|node-exporter:node-exporter|eth0.202|10.20.20.12|9100|[[adm-1 details|adm-1]] |Prometheus node metrics endpoint|Capacity and availability monitoring|
+
+h2. Output packets
+
+|_.Remote hostname|_.Remote ip address|_.Protocol|_.Port|_.Service name|_.Description|_.Justification|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|udp internal-dns|53|dns|Recursive resolver for the whole estate|Name resolution without exposing internal names outside|
+
+h2. Forward packets
+
+|_.Source|_.Source address|_.Destination|_.Destination address|_.Interfaces (input/output)|_.Protocol|_.Port|_.SNAT|_.DNAT|_.Description|_.Justification|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[db-1 details|db-1]]|10.20.22.21|eth0.202/eth0.203|postgres|tcp:5432|||Primary PostgreSQL cluster|Primary PostgreSQL cluster|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[db-1 details|db-1]]|10.20.22.21|eth0.202/eth0.203|ssh|tcp:22|||Administrative SSH access|Administrative SSH access|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[db-1 details|db-1]]|10.20.22.21|eth0.202/eth0.203|node-exporter|tcp:9100|||Prometheus node metrics endpoint|Prometheus node metrics endpoint|
+|[[web-1 details|web-1]]|10.20.20.21|[[db-1 details|db-1]]|10.20.22.21|eth0.202/eth0.203|postgres|tcp:5432|||Primary PostgreSQL cluster|Primary PostgreSQL cluster|
+|[[proxy-1 details|proxy-1]]|10.20.2.21|[[partner-api_example_com details|partner-api.example.com]]|198.51.100.50|eth0.201/eth0.100|https|tcp:443|198.51.100.10||Partner settlement API|Partner settlement API|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[proxy-1 details|proxy-1]]|10.20.2.21|eth0.202/eth0.201|proxy|tcp:3128|||Forward proxy for outgoing HTTPS callbacks|Forward proxy for outgoing HTTPS callbacks|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[proxy-1 details|proxy-1]]|10.20.2.21|eth0.202/eth0.201|dns|udp:53|||Recursive resolver for the whole estate|Recursive resolver for the whole estate|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[proxy-1 details|proxy-1]]|10.20.2.21|eth0.202/eth0.201|ssh|tcp:22|||Administrative SSH access|Administrative SSH access|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[proxy-1 details|proxy-1]]|10.20.2.21|eth0.202/eth0.201|node-exporter|tcp:9100|||Prometheus node metrics endpoint|Prometheus node metrics endpoint|
+|[[db-1 details|db-1]]|10.20.22.21|[[proxy-1 details|proxy-1]]|10.20.2.21|eth0.203/eth0.201|dns|udp:53|||Recursive resolver for the whole estate|Recursive resolver for the whole estate|
+|[[web-1 details|web-1]]|10.20.20.21|[[proxy-1 details|proxy-1]]|10.20.2.21|eth0.202/eth0.201|proxy|tcp:3128|||Forward proxy for outgoing HTTPS callbacks|Forward proxy for outgoing HTTPS callbacks|
+|[[web-1 details|web-1]]|10.20.20.21|[[proxy-1 details|proxy-1]]|10.20.2.21|eth0.202/eth0.201|dns|udp:53|||Recursive resolver for the whole estate|Recursive resolver for the whole estate|
+|[[adm-1 details|adm-1]]|10.20.20.31|[[sw-core-1 details|sw-core-1]]|10.20.6.2|eth0.202/eth0.206|ssh|tcp:22|||Administrative SSH access|Administrative SSH access|
+|[[partner-api_example_com details|partner-api.example.com]]|198.51.100.50|[[web-1 details|web-1]]|10.20.20.21|eth0.100/eth0.202|https|tcp:443||10.20.20.21:443|Customer-facing web application|Customer-facing web application|

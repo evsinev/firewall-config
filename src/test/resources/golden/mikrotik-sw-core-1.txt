@@ -1,0 +1,88 @@
+# sw-core-1 201
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=201
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=201 ports=ether3 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether3 vlan-id=201
+
+# sw-core-1 206
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=206
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=206 ports=ether4,ether6,ether8,ether10 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether4,ether6,ether8,ether10 vlan-id=206
+
+# sw-core-1 202
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=202
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=202 ports=ether5,ether7 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether5,ether7 vlan-id=202
+
+# sw-core-1 206
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=206
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=206 ports=ether4,ether6,ether8,ether10 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether4,ether6,ether8,ether10 vlan-id=206
+
+# sw-core-1 202
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=202
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=202 ports=ether5,ether7 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether5,ether7 vlan-id=202
+
+# sw-core-1 206
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=206
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=206 ports=ether4,ether6,ether8,ether10 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether4,ether6,ether8,ether10 vlan-id=206
+
+# sw-core-1 203
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=203
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=203 ports=ether9 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether9 vlan-id=203
+
+# sw-core-1 206
+
+/interface ethernet switch egress-vlan-tag
+add tagged-ports=ether1 vlan-id=206
+
+/interface ethernet switch ingress-vlan-translation
+add new-customer-vid=206 ports=ether4,ether6,ether8,ether10 sa-learning=yes
+
+/interface ethernet switch vlan
+add ports=ether1,ether4,ether6,ether8,ether10 vlan-id=206
+
