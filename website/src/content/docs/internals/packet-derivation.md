@@ -93,12 +93,13 @@ handled correctly.
 ## SNAT and DNAT
 
 Direction is never declared. It follows from which side is public, where *public* means: not `10.`,
-not `172.16`, not `192.168`.
+not `172.16`, not `192.168`. A destination host carrying `external_peer: true` counts as public too —
+that is how a partner behind a tunnel gets SNAT despite its RFC 1918 address.
 
 ```mermaid
 graph TD
   start["forward packet<br/>source → destination"]
-  dpub{"destination<br/>public?"}
+  dpub{"destination public<br/>or external_peer?"}
   spub{"source<br/>public?"}
   snat["SNAT<br/>POSTROUTING --to-source nat.address"]
   dnat["DNAT<br/>PREROUTING --to-destination service"]
@@ -119,6 +120,8 @@ graph TD
   the service and the destination host as YAML so you can see what was being resolved.
 - **DNAT** requires `nat:` too — `No nat for service … at host …`.
 - **Both** is not expressible: `Trying to config both SNAT and DNAT with …`.
+- `external_peer` is read on the **destination** only. As a source, such a host is private like any
+  other and produces no DNAT.
 
 The NAT rule is a second projection of the same packet, so a translated flow appears in both `*filter`
 and `*nat`.

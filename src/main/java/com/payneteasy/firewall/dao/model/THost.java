@@ -30,6 +30,13 @@ public class THost {
 
     public List<TBlockedIpAddress> blockedIpAddresses;
 
+    /**
+     * The host is outside our address space, even though its address is private -
+     * a partner reached over a tunnel. Traffic towards it is SNAT-ed to the nat:
+     * address of the service, exactly as for a public destination.
+     */
+    public boolean external_peer;
+
     public String getDefaultIp() {
         String ip = interfaces.get(0).ip;
         if(Networks.isIpAddress(ip)) {
@@ -74,6 +81,7 @@ public class THost {
                 ", services=" + services +
                 ", color='" + color + '\'' +
                 ", blockedIpAddresses=" + blockedIpAddresses +
+                ", external_peer=" + external_peer +
                 ", services_links='" + services_links + '\'' +
                 ", customRules=" + customRules +
                 '}';

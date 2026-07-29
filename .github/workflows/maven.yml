@@ -35,3 +35,13 @@ jobs:
           java -cp $JAR com.payneteasy.firewall.MainBind . demo.example.com bind-out
           java -cp $JAR com.payneteasy.firewall.MainKeepalived . fw-1
           java -cp $JAR com.payneteasy.firewall.MainMikrotik . sw-core-1
+
+      # The fat jar is the only delivery form, and releases are cut from tags - this makes the
+      # same jar downloadable from any run, including a pull request's. Last step on purpose:
+      # an artifact exists only when the tests and the demo sweep both passed.
+      - name: Upload the jar
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: firewall-config-jar
+          path: target/firewall-config.jar
+          if-no-files-found: error

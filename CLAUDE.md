@@ -126,8 +126,10 @@ Regardless of file:
 - **Netmasks**: only `/24` (implied) and `/16` are supported; anything else throws from
   `TInterface.getLongNetmask()`. The `/24` assumption also leaks into `networks.yml` keys and into the
   "same network" suppression filter.
-- **SNAT for private ranges is a hard-coded address list** in `PacketServiceImpl` (marked
-  `// todo hot fix for SNAT`). Adding a SNAT-ed private network means editing Java, not YAML.
+- **SNAT to a private destination needs `external_peer: true` on that host** (partners behind
+  tunnels). The flag is per host — a whole partner `/24` cannot be declared in one line — and it is
+  read on the destination side only, so such a host as a *source* still produces no DNAT. Forgetting
+  it is silent: the flow comes out as a plain FORWARD with no translation.
 - `findAddress` picks the source address with the longest *binary* prefix match — it is not a routing
   lookup, so multi-homed hosts can get the wrong leg. It is also the one unit-tested method.
 - **No generator creates directories**, and several write CWD-relative fixed paths

@@ -1,0 +1,8 @@
+h1. partner-vpn.example.com
+
+Partner settlement API reached over an IPsec tunnel
+
+h2. Business goal
+
+Settlement requests to a partner whose own network is RFC 1918
+{{include(partner-vpn_example_com_packets)}}

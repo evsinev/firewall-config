@@ -1,4 +1,5 @@
 h2. external group
 
 |_.Host|_.IP address|_.Description|_.Justification|
+|[[partner-vpn_example_com details|partner-vpn.example.com]]|172.16.4.50|Partner settlement API reached over an IPsec tunnel|Settlement requests to a partner whose own network is RFC 1918|
 |[[partner-api_example_com details|partner-api.example.com]]|198.51.100.50|Partner settlement API|Outgoing settlement requests and incoming callbacks|

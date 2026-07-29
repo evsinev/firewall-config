@@ -23,7 +23,9 @@ All addresses are from the documentation ranges reserved by RFC 5737
    dmz .2.0   app .20.0   db .22.0   ipmi .6.0        (all 10.20.x.0/24)
        |         |           |        |
    proxy-1    web-1       db-1    sw-core-1
-              adm-1
+      :       adm-1
+      : tunnel
+   partner-vpn.example.com 172.16.4.50
 ```
 
 | Group      | Host                      | Role                                             |
@@ -35,6 +37,7 @@ All addresses are from the documentation ranges reserved by RFC 5737
 | `internal` | `adm-1`                   | Jump host, Prometheus, owner of the shared service definitions |
 | `ipmi`     | `sw-core-1`               | Core switch — the only place cabling is described |
 | `external` | `partner-api.example.com` | Third-party peer on a public address             |
+| `external` | `partner-vpn.example.com` | Third-party peer on a private address, behind a tunnel routed via the DMZ |
 
 ## What it exercises
 
@@ -44,6 +47,7 @@ All addresses are from the documentation ranges reserved by RFC 5737
 | Shared service definitions via `services_links` | declared in `adm-1.yml`, linked everywhere |
 | `access:` by exact host, `group-internal`, `adm-*`, `web-app.service` | `proxy-1.yml`, `db-1.yml` |
 | SNAT (private source → public destination) | `partner-api.example.com.yml` |
+| SNAT to a private peer via `external_peer:` | `partner-vpn.example.com.yml` |
 | DNAT (public source → private destination) | `web-1.yml` |
 | `blockedIpAddresses`, `customRules` | `fw-1.yml` |
 | `mss:` TCPMSS clamping | `partner-api.example.com.yml` |

@@ -94,24 +94,7 @@ public class PacketServiceImpl implements IPacketService {
                     packet.program = service.program;
 
                     // SNAT
-                    if(isPublicAddress(destinationHost.getDefaultIp())
-                            || destinationHost.getDefaultIp().equals("10.12.12.50")
-                            || destinationHost.getDefaultIp().equals("10.170.1.1")
-                            || destinationHost.getDefaultIp().equals("10.53.50.33")
-                            || destinationHost.getDefaultIp().equals("10.2.2.56")
-                            || destinationHost.getDefaultIp().equals("10.2.2.57")
-                            || destinationHost.getDefaultIp().equals("10.102.2.57")
-                            || destinationHost.getDefaultIp().equals("10.102.2.56")
-                            || destinationHost.getDefaultIp().equals("10.102.2.56")
-                            || destinationHost.getDefaultIp().equals("10.58.36.1")
-                            || destinationHost.getDefaultIp().equals("172.16.229.1")
-                            || destinationHost.getDefaultIp().equals("10.201.88.200")
-                            || destinationHost.getDefaultIp().startsWith("172.16.4.")
-                            || destinationHost.getDefaultIp().equals("172.16.3.4")
-                            || destinationHost.getDefaultIp().equals("10.22.198.44")
-                            || destinationHost.getDefaultIp().equals("10.22.198.45")
-                            || destinationHost.getDefaultIp().equals("10.22.198.46")
-                            ) { // todo hot fix for SNAT
+                    if(isPublicAddress(destinationHost.getDefaultIp()) || destinationHost.external_peer) {
 
                         checkNotNull(service.nat, "Direction %s -> %s:%s wants to use NAT address but no NAT address was found."
                                         + "\n\n    Source host     : %s"

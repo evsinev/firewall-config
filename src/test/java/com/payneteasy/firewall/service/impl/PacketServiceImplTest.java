@@ -362,12 +362,72 @@ public class PacketServiceImplTest {
     public void forwardPacketsCarrySnatForAPublicDestination() throws Exception {
         boolean found = false;
         for (com.payneteasy.firewall.service.model.Packet packet : service.getForwardPackets("fw-1")) {
-            if ("SNAT".equals(packet.type)) {
+            if ("198.51.100.50".equals(packet.destination_address)) {
+                assertThat(packet.type, is("SNAT"));
                 assertThat(packet.source_nat_address, is("198.51.100.10"));
                 found = true;
             }
         }
         assertThat("an SNAT packet was derived", found, is(true));
+    }
+
+    /**
+     * external_peer: true makes a private destination SNAT-ed too - the partner behind the
+     * tunnel in the demo network. This is the case that used to be a literal address list
+     * in this class.
+     */
+    @Test
+    public void forwardPacketsCarrySnatForAnExternalPeerOnAPrivateAddress() throws Exception {
+        boolean found = false;
+        for (com.payneteasy.firewall.service.model.Packet packet : service.getForwardPackets("fw-1")) {
+            if ("172.16.4.50".equals(packet.destination_address)) {
+                assertThat(packet.type, is("SNAT"));
+                assertThat(packet.source_address, is("10.20.20.21"));
+                assertThat(packet.source_nat_address, is("10.20.2.1"));
+                found = true;
+            }
+        }
+        assertThat("an SNAT packet was derived for the external peer", found, is(true));
+    }
+
+    /** Without the flag the same private destination gets no translation at all. */
+    @Test
+    public void aPrivateDestinationWithoutTheExternalPeerFlagIsNotTranslated() throws Exception {
+        IConfigDao dao = new ConfigDaoYaml(TestFixtures.demoNetworkDir());
+        THost peer = dao.getHostByName("partner-vpn.example.com");
+        peer.external_peer = false;
+        try {
+            boolean found = false;
+            for (com.payneteasy.firewall.service.model.Packet packet
+                    : new PacketServiceImpl(dao).getForwardPackets("fw-1")) {
+                if ("172.16.4.50".equals(packet.destination_address)) {
+                    assertThat(packet.type, is(nullValue()));
+                    found = true;
+                }
+            }
+            assertThat("the flow is still derived, only untranslated", found, is(true));
+        } finally {
+            peer.external_peer = true;
+        }
+    }
+
+    /** An external peer needs nat: for the same reason a public destination does. */
+    @Test
+    public void anExternalPeerWithoutANatAddressFails() throws Exception {
+        IConfigDao dao = new ConfigDaoYaml(TestFixtures.demoNetworkDir());
+        com.payneteasy.firewall.dao.model.TService settlement =
+                dao.getHostByName("partner-vpn.example.com").services.get(0);
+
+        String saved = settlement.nat;
+        settlement.nat = null;
+        try {
+            new PacketServiceImpl(dao).getForwardPackets("fw-1");
+            throw new AssertionError("expected a NullPointerException");
+        } catch (NullPointerException e) {
+            assertThat(e.getMessage(), containsString("wants to use NAT address but no NAT address was found"));
+        } finally {
+            settlement.nat = saved;
+        }
     }
 
     /**

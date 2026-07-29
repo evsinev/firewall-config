@@ -11,6 +11,26 @@ jar and publishes it as `firewall-config-1.2.0.jar`
 
 ## [Unreleased]
 
+### Added
+
+- **`external_peer: true` on a host.** Declares that the host is outside our address space even
+  though its address is private — a partner reached over a tunnel — so traffic *towards* it is
+  SNAT-ed to the service's `nat:` address, exactly as for a public destination. The flag is read on
+  the destination side only; as a source such a host stays private and produces no DNAT.
+  `examples/demo-network` gained `partner-vpn.example.com` to exercise it.
+
+### Removed
+
+- **The hard-coded SNAT address list in `PacketServiceImpl`.** Fifteen literal addresses (and the
+  `172.16.4.` prefix) marked `// todo hot fix for SNAT` are gone; the same effect is now declared per
+  host with `external_peer: true`.
+
+  **Update your description *before* upgrading the generator.** Every destination that used to match
+  that list needs the flag, including *each* host inside a matched network such as `172.16.4.0/24`. A
+  missed host fails silently: the flow is still generated, just as a plain `FORWARD` with no
+  translation. Generate into a scratch directory with both versions and diff — the difference must be
+  empty.
+
 ## [1.3.0] — 2026-07-29
 
 A safety net and a clear-out. The generated output is now pinned by golden files and a coverage
