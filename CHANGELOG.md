@@ -11,9 +11,19 @@ jar and publishes it as `firewall-config-1.2.0.jar`
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-07-29
+
+A safety net and a clear-out. The generated output is now pinned by golden files and a coverage
+gate, and the dependency tree — frozen since 2013 — no longer carries a known CVE. Nothing about
+the generated rule sets, wiki pages, zone files or diagrams changed: every golden file still
+matches byte for byte, which is what made the dependency work reviewable at all.
+
+One behaviour change to be aware of before upgrading: wiki pages are pushed to Redmine as JSON
+rather than XML.
+
 ### Added
 
-- **A test suite and an 80% coverage gate.** 208 JUnit tests, up from 9. The generated output
+- **A test suite and an 80% coverage gate.** 210 JUnit tests, up from 9. The generated output
   of six generators is now compared against expected files committed under
   `src/test/resources/golden/`, so a silently changed iptables rule, wiki page, bind record,
   keepalived instance, RouterOS vlan block or nwdiag network fails the build — the gap CLAUDE.md
@@ -29,7 +39,7 @@ jar and publishes it as `firewall-config-1.2.0.jar`
   The measured bundle excludes the Swing L2 editor, the Redmine HTTP clients, `podmancheck`,
   `CommandProcess` and thirteen CLI shims — roughly 31% of `src/main/java` that cannot be unit
   tested; each exclusion is commented in `pom.xml`. Adding a new CLI now means either testing it
-  or adding it to that list. Current coverage is 92%.
+  or adding it to that list. Current coverage is 92% (2048 of 2216 lines).
 
 ### Changed
 
@@ -54,10 +64,17 @@ jar and publishes it as `firewall-config-1.2.0.jar`
   `maven-resources-plugin` 2.6 → 3.3.1. 3.9.16 is the ceiling: Maven 4 requires Java 17.
 - The first round of Dependabot updates landed: `snakeyaml` 2.4 → 2.6, `maven-assembly-plugin`
   3.3.0 → 3.8.0, `jacoco-maven-plugin` 0.8.12 → 0.8.15, `maven-surefire-plugin` 2.22.2 → 3.5.6, and
-  `actions/checkout` → v7.0.1. The golden files, the 210 tests and the `pages_history.yml` dump
+  the three pinned actions — `actions/checkout` → v7.0.1, `actions/setup-java` → v5.6.0,
+  `actions/deploy-pages` → v5.0.0, which together clear the Node 20 deprecation warning CI had
+  started emitting on every run. The golden files, the 210 tests and the `pages_history.yml` dump
   format are all unchanged, and the JaCoCo bundle still measures the same 83 classes — worth
   checking, because a surefire major bump is exactly what could have silently dropped the
   jacoco `argLine` and taken coverage to zero.
+- Two Dependabot proposals were rejected rather than merged, both recorded as ignore rules with the
+  reasoning in `.github/dependabot.yml`: `slf4j-nop` 2.0.18 (green CI, but slf4j 2.x providers are
+  found through `ServiceLoader`, which the `slf4j-api` 1.7.36 that Velocity brings never calls — the
+  jar would have silenced nothing) and `hamcrest-library` 3.0, which cannot compile because that
+  artifact is an empty stub since hamcrest 2.x.
 - `hamcrest-library` 1.3 → `org.hamcrest:hamcrest` 3.0, with `hamcrest-core` excluded from junit so
   the `org.hamcrest.*` classes are not on the test classpath in two versions at once. Since
   hamcrest 2.x the `-library` and `-core` artifacts are empty stubs, so bumping `hamcrest-library`
@@ -211,6 +228,7 @@ Covers the project from its first commit in January 2013.
 - **Diagrams and switch configuration**: L1 and L2 diagrams, Mikrotik trunk configuration
   (`MainMikrotik`), CentOS network interface scripts, per-host colours and `ipmi_ip`.
 
+[1.3.0]: https://github.com/evsinev/firewall-config/releases/tag/1.3.0
 [1.2.0]: https://github.com/evsinev/firewall-config/releases/tag/1.2.0
 [1.1-1]: https://github.com/evsinev/firewall-config/releases/tag/1.1-1
 [1.1-SNAPSHOT]: https://github.com/evsinev/firewall-config/releases/tag/1.1-SNAPSHOT
