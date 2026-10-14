@@ -40,7 +40,7 @@ jobs:
       # same jar downloadable from any run, including a pull request's. Last step on purpose:
       # an artifact exists only when the tests and the demo sweep both passed.
       - name: Upload the jar
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: firewall-config-jar
           path: target/firewall-config.jar
