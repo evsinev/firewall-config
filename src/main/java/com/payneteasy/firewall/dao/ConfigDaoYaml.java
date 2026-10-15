@@ -213,6 +213,8 @@ public class ConfigDaoYaml implements IConfigDao {
         if(aDir==null) throw new IllegalStateException("aDir is null");
         File[] entries = aDir.listFiles();
         if(entries==null) return;
+        // listFiles() order is filesystem-dependent; sort so generated output is reproducible
+        Arrays.sort(entries);
 
         for (File entry : entries) {
             if(entry.isDirectory()) {

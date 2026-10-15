@@ -10,36 +10,36 @@ nwdiag {
     network "internet" {
         address = "198.51.100.0/24";
 
-            fw-2 [address = "198.51.100.12"];
             fw-1 [address = "198.51.100.11"];
+            fw-2 [address = "198.51.100.12"];
     }
     network "app" {
         address = "10.20.20.0/24";
 
             adm-1 [address = "10.20.20.31"];
             web-1 [address = "10.20.20.21"];
-            fw-2 [address = "10.20.20.12"];
             fw-1 [address = "10.20.20.11"];
+            fw-2 [address = "10.20.20.12"];
     }
     network "db" {
         address = "10.20.22.0/24";
 
-            fw-2 [address = "10.20.22.12"];
             fw-1 [address = "10.20.22.11"];
+            fw-2 [address = "10.20.22.12"];
             db-1 [address = "10.20.22.21"];
     }
     network "dmz" {
         address = "10.20.2.0/24";
 
-            fw-2 [address = "10.20.2.12"];
             fw-1 [address = "10.20.2.11"];
+            fw-2 [address = "10.20.2.12"];
             proxy-1 [address = "10.20.2.21"];
     }
     network "ipmi" {
         address = "10.20.6.0/24";
 
-            fw-2 [address = "10.20.6.12"];
             fw-1 [address = "10.20.6.11"];
+            fw-2 [address = "10.20.6.12"];
             sw-core-1 [address = "10.20.6.2"];
     }
 }

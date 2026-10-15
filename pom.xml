@@ -84,7 +84,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>33.6.0-jre</version>
+            <version>33.7.2-jre</version>
         </dependency>
 
         <!-- 3.4.4 is the last Java 8 release; 4.x needs Java 11 and moves the
